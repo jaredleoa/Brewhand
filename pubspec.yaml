@@ -1,0 +1,46 @@
+name: brewhand
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  cupertino_icons: ^1.0.8
+  
+  # FontAwesome icons for additional icon support
+  flutter_vector_icons: ^2.0.0
+  
+  # Added flutter_svg for SVG support
+  flutter_svg: ^2.0.9
+
+  # For sharing content
+  share_plus: ^7.2.1
+  
+  # For local storage
+  shared_preferences: ^2.2.2
+  
+  # For generating unique IDs
+  uuid: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Asset declaration for SVG files
+  assets:
+    - assets/my_brews.svg
+    - assets/brew_master.svg
+    - assets/brew_bot.svg
+    - assets/brew_social.svg
+    - assets/coffee_cup.svg
+    - assets/Star.svg
