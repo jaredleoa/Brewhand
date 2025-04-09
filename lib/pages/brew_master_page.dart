@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:brewhand/models/coffee_region.dart';
 import 'package:brewhand/pages/brew_history_page.dart';
+import 'package:brewhand/models/brew_history.dart';
 import 'package:brewhand/services/bean_library_service.dart';
 import 'package:brewhand/services/brew_data_service.dart';
 import 'package:brewhand/pages/my_brews_page.dart';
@@ -317,8 +318,7 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              height: MediaQuery.of(context).size.height *
-                  0.80, // Reduced height to avoid overflow
+              height: MediaQuery.of(context).size.height * 0.80,
               decoration: BoxDecoration(
                 color: darkBrown,
                 borderRadius: BorderRadius.only(
@@ -333,381 +333,387 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title with underline
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Brew Setup - $methodName",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: brightOrange,
-                          ),
-                        ),
-                        Container(
-                          height: 3,
-                          width: 100,
-                          margin: EdgeInsets.only(top: 8),
-                          decoration: BoxDecoration(
-                            color: brightOrange,
-                            borderRadius: BorderRadius.circular(1.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 24),
-
-                    // Region selection
-                    Text(
-                      "Region:",
-                      style: TextStyle(fontSize: 18, color: brightOrange),
-                    ),
-                    SizedBox(height: 8),
-                    _buildDropdown(
-                      value: selectedRegion,
-                      items: beanLibrary.regions
-                          .map((region) => region.name)
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setModalState(() {
-                            selectedRegion = value;
-                            // Update selected bean to first in the new region
-                            for (var region in beanLibrary.regions) {
-                              if (region.name == value &&
-                                  region.countries.isNotEmpty) {
-                                selectedBean = region.countries[0];
-                                break;
-                              }
-                            }
-                          });
-                        }
-                      },
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Bean selection
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Coffee beans:",
-                                style: TextStyle(
-                                    fontSize: 18, color: brightOrange),
-                              ),
-                              SizedBox(height: 8),
-                              // Get countries for the selected region
-                              _buildDropdown(
-                                value: selectedBean,
-                                items: _getBeansForSelectedRegion(),
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    setModalState(() {
-                                      selectedBean = value;
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        IconButton(
-                          icon: Icon(Icons.add_circle, color: brightOrange),
-                          onPressed: () =>
-                              _showAddBeanDialog(context, setModalState),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 16),
-
-                    // Recommended Grind Size Display (no dropdown, just info)
-                    Text(
-                      "Recommended Grind Size:",
-                      style: TextStyle(fontSize: 18, color: brightOrange),
-                    ),
-                    SizedBox(height: 8),
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: mediumBrown,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: orangeBrown.withOpacity(0.5)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            recommendedGrindSize,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Icon(
-                            Icons.info_outline,
-                            color: brightOrange,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 24),
-
-                    // Water and coffee amount sliders in a card
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: orangeBrown.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
+              child: SingleChildScrollView(
+                // Add SingleChildScrollView here
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Add this
+                    children: [
+                      // Title with underline
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Brew Ratio",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: brightOrange,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: darkBrown,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  "1:${(waterAmount / coffeeAmount).toStringAsFixed(1)}",
+                          Text(
+                            "Brew Setup - $methodName",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: brightOrange,
+                            ),
+                          ),
+                          Container(
+                            height: 3,
+                            width: 100,
+                            margin: EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              color: brightOrange,
+                              borderRadius: BorderRadius.circular(1.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 24),
+
+                      // Region selection
+                      Text(
+                        "Region:",
+                        style: TextStyle(fontSize: 18, color: brightOrange),
+                      ),
+                      SizedBox(height: 8),
+                      _buildDropdown(
+                        value: selectedRegion,
+                        items: beanLibrary.regions
+                            .map((region) => region.name)
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setModalState(() {
+                              selectedRegion = value;
+                              // Update selected bean to first in the new region
+                              for (var region in beanLibrary.regions) {
+                                if (region.name == value &&
+                                    region.countries.isNotEmpty) {
+                                  selectedBean = region.countries[0];
+                                  break;
+                                }
+                              }
+                            });
+                          }
+                        },
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Bean selection
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Coffee beans:",
                                   style: TextStyle(
-                                    fontSize: 16,
+                                      fontSize: 18, color: brightOrange),
+                                ),
+                                SizedBox(height: 8),
+                                // Get countries for the selected region
+                                _buildDropdown(
+                                  value: selectedBean,
+                                  items: _getBeansForSelectedRegion(),
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setModalState(() {
+                                        selectedBean = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(Icons.add_circle, color: brightOrange),
+                            onPressed: () =>
+                                _showAddBeanDialog(context, setModalState),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 16),
+
+                      // Recommended Grind Size Display (no dropdown, just info)
+                      Text(
+                        "Recommended Grind Size:",
+                        style: TextStyle(fontSize: 18, color: brightOrange),
+                      ),
+                      SizedBox(height: 8),
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: mediumBrown,
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: orangeBrown.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              recommendedGrindSize,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Icon(
+                              Icons.info_outline,
+                              color: brightOrange,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Water and coffee amount sliders in a card
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: orangeBrown.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Brew Ratio",
+                                  style: TextStyle(
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: brightOrange,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.coffee,
-                                            size: 14, color: brightOrange),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          "Coffee: $coffeeAmount g",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: brightOrange,
-                                          ),
-                                        ),
-                                      ],
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: darkBrown,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    "1:${(waterAmount / coffeeAmount).toStringAsFixed(1)}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: brightOrange,
                                     ),
-                                    SizedBox(height: 4),
-                                    Stack(
-                                      children: [
-                                        Container(
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: darkBrown,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        ),
-                                        Container(
-                                          height: 8,
-                                          width: (coffeeAmount - 10) /
-                                              30 *
-                                              MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.7,
-                                          decoration: BoxDecoration(
-                                            color: brightOrange,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    Slider(
-                                      value: coffeeAmount.toDouble(),
-                                      min: 10,
-                                      max: 40,
-                                      divisions: 30,
-                                      activeColor: brightOrange,
-                                      inactiveColor:
-                                          orangeBrown.withOpacity(0.3),
-                                      onChanged: (value) {
-                                        setModalState(() {
-                                          coffeeAmount = value.toInt();
-                                          // Calculate water based on coffee (using 1:16.67 ratio)
-                                          waterAmount =
-                                              (coffeeAmount * 16.67).round();
-                                        });
-                                      },
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Water: $waterAmount ml",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: brightOrange,
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.coffee,
+                                              size: 14, color: brightOrange),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            "Coffee: $coffeeAmount g",
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: brightOrange,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Stack(
-                                      children: [
-                                        Container(
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            color: darkBrown,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                      SizedBox(height: 4),
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: darkBrown,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
                                           ),
-                                        ),
-                                        Container(
-                                          height: 8,
-                                          width: (waterAmount - 150) /
-                                              850 *
-                                              MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.7,
-                                          decoration: BoxDecoration(
-                                            color:
-                                                brightOrange.withOpacity(0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                          Container(
+                                            height: 8,
+                                            width: (coffeeAmount - 10) /
+                                                30 *
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.7,
+                                            decoration: BoxDecoration(
+                                              color: brightOrange,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
                                           ),
+                                        ],
+                                      ),
+                                      Slider(
+                                        value: coffeeAmount.toDouble(),
+                                        min: 10,
+                                        max: 40,
+                                        divisions: 30,
+                                        activeColor: brightOrange,
+                                        inactiveColor:
+                                            orangeBrown.withOpacity(0.3),
+                                        onChanged: (value) {
+                                          setModalState(() {
+                                            coffeeAmount = value.toInt();
+                                            // Calculate water based on coffee (using 1:16.67 ratio)
+                                            waterAmount =
+                                                (coffeeAmount * 16.67).round();
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Water: $waterAmount ml",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: brightOrange,
                                         ),
-                                      ],
-                                    ),
-                                    // Water slider (read-only)
-                                    Slider(
-                                      value: waterAmount.toDouble(),
-                                      min: 150,
-                                      max: 1000,
-                                      divisions: 17,
-                                      activeColor:
-                                          brightOrange.withOpacity(0.3),
-                                      inactiveColor:
-                                          orangeBrown.withOpacity(0.2),
-                                      onChanged:
-                                          null, // Makes the slider read-only
-                                    ),
-                                  ],
+                                      ),
+                                      SizedBox(height: 4),
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: darkBrown,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                          Container(
+                                            height: 8,
+                                            width: (waterAmount - 150) /
+                                                850 *
+                                                MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.7,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  brightOrange.withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // Water slider (read-only)
+                                      Slider(
+                                        value: waterAmount.toDouble(),
+                                        min: 150,
+                                        max: 1000,
+                                        divisions: 17,
+                                        activeColor:
+                                            brightOrange.withOpacity(0.3),
+                                        inactiveColor:
+                                            orangeBrown.withOpacity(0.2),
+                                        onChanged:
+                                            null, // Makes the slider read-only
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Action buttons at the bottom
+                      SizedBox(height: 30),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey.shade800,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 3,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ],
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: brightOrange,
+                                foregroundColor: darkBrown,
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 3,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  selectedMethod = methodName;
+                                  showGuide = true;
+                                  currentStep = 0;
+                                  brewCompleted = false;
+                                });
+                              },
+                              child: Text(
+                                "Start Brewing",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: darkBrown,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-
-                    Spacer(),
-
-                    // Buttons with updated design
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade800,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 3,
-                            ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text(
-                              "Cancel",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: brightOrange,
-                              foregroundColor: darkBrown,
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 3,
-                            ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              setState(() {
-                                selectedMethod = methodName;
-                                showGuide = true;
-                                currentStep = 0;
-                                brewCompleted = false;
-                              });
-                            },
-                            child: Text(
-                              "Start Brewing",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: darkBrown,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -899,15 +905,11 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
     int rating = 4; // Default rating
     TextEditingController notesController = TextEditingController();
 
-    // Calculate the height constraints to avoid overflow
-    final double screenHeight = MediaQuery.of(context).size.height;
-
     return StatefulBuilder(
       builder: (context, setInnerState) {
         return Container(
           margin: EdgeInsets.all(16),
-          padding: EdgeInsets.all(20), // Reduced padding to prevent overflow
-          height: screenHeight * 0.6, // Control the height to prevent overflow
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -926,199 +928,194 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Achievement badge
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 80, // Reduced size
-                    height: 80, // Reduced size
-                    decoration: BoxDecoration(
-                      color: darkBrown,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.amber,
-                        width: 3,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Achievement badge
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: darkBrown,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.amber, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.emoji_events,
+                    size: 50,
+                    color: Colors.amber,
+                  ),
+                ),
+
+                // Brew complete card
+                Container(
+                  padding: EdgeInsets.all(16),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: darkBrown.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Congratulations!",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: brightOrange,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "You've successfully brewed a $selectedMethod using $selectedBean beans!",
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // Rating system
+                Container(
+                  padding: EdgeInsets.all(16),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: darkBrown.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "How was your coffee?",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: brightOrange,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setInnerState(() {
+                                rating = index + 1;
+                              });
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Icon(
+                                Icons.star,
+                                size: 30,
+                                color: index < rating
+                                    ? Colors.amber
+                                    : Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      SizedBox(height: 12),
+
+                      // Notes field
+                      TextField(
+                        controller: notesController,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: "Add notes about this brew (optional)",
+                          hintStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.5)),
+                          fillColor: mediumBrown.withOpacity(0.8),
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.all(12),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                                color: brightOrange.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: brightOrange),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Save button
+                Padding(
+                  padding: const EdgeInsets.only(top: 24.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: darkBrown,
+                      foregroundColor: brightOrange,
+                      minimumSize: Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      side: BorderSide(color: brightOrange, width: 2),
+                      elevation: 5,
+                    ),
+                    onPressed: () {
+                      // Create a BrewHistory object with the current details
+                      final BrewHistory newBrew = BrewHistory(
+                        id: Uuid().v4(),
+                        brewMethod: selectedMethod,
+                        beanType: selectedBean,
+                        grindSize: recommendedGrindSize,
+                        waterAmount: waterAmount,
+                        coffeeAmount: coffeeAmount,
+                        brewDate: DateTime.now(),
+                        rating: rating,
+                        notes: notesController.text,
+                      );
+
+                      // Save to history and update stats
+                      BrewDataService().saveBrewHistory(newBrew).then((_) {
+                        setState(() {
+                          showGuide = false;
+                          _showBrewSavedDialog();
+                        });
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.save_alt, color: brightOrange),
+                        SizedBox(width: 8),
+                        Text(
+                          "Save to My Brews",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: brightOrange,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.emoji_events,
-                    size: 50, // Reduced size
-                    color: Colors.amber,
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 16), // Reduced spacing
-
-              // Brew complete card
-              Container(
-                padding: EdgeInsets.all(12), // Reduced padding
-                decoration: BoxDecoration(
-                  color: darkBrown.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      "Congratulations!",
-                      style: TextStyle(
-                        fontSize: 24, // Reduced font size
-                        fontWeight: FontWeight.bold,
-                        color: brightOrange,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8), // Reduced spacing
-                    Text(
-                      "You've successfully brewed a $selectedMethod using $selectedBean beans!",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 16), // Reduced spacing
-
-              // Rating system with improved visuals
-              Container(
-                padding: EdgeInsets.all(12), // Reduced padding
-                decoration: BoxDecoration(
-                  color: darkBrown.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      "How was your coffee?",
-                      style: TextStyle(
-                        fontSize: 18, // Slightly smaller font size
-                        fontWeight: FontWeight.bold,
-                        color: brightOrange,
-                      ),
-                    ),
-                    SizedBox(height: 12), // Reduced spacing
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setInnerState(() {
-                              rating = index + 1;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 4.0), // Reduced padding
-                            child: Icon(
-                              Icons.star,
-                              size: 30, // Smaller icons
-                              color: index < rating
-                                  ? Colors.amber
-                                  : Colors.white.withOpacity(0.3),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    SizedBox(height: 12), // Reduced spacing
-
-                    // Notes field with improved styling
-                    TextField(
-                      controller: notesController,
-                      maxLines: 2, // Reduced lines
-                      decoration: InputDecoration(
-                        hintText: "Add notes about this brew (optional)",
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.5)),
-                        fillColor: mediumBrown.withOpacity(0.8),
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.all(12), // Reduced padding
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: brightOrange.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: brightOrange),
-                        ),
-                      ),
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-
-              Spacer(),
-
-              // Save button with enhanced styling
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: darkBrown,
-                  foregroundColor: brightOrange,
-                  minimumSize: Size(double.infinity, 50), // Reduced height
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  side: BorderSide(color: brightOrange, width: 2),
-                  elevation: 5,
-                ),
-                onPressed: () {
-                  // Create a BrewHistory object with the current details
-                  final BrewHistory newBrew = BrewHistory(
-                    id: Uuid().v4(),
-                    brewMethod: selectedMethod,
-                    beanType: selectedBean,
-                    grindSize: recommendedGrindSize,
-                    waterAmount: waterAmount,
-                    coffeeAmount: coffeeAmount,
-                    brewDate: DateTime.now(),
-                    rating: rating,
-                    notes: notesController.text,
-                  );
-
-                  // Save to history using the BrewDataService
-                  BrewDataService().saveBrewHistory(newBrew).then((_) {
-                    setState(() {
-                      showGuide = false;
-                      _showBrewSavedDialog();
-                    });
-                  });
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.save_alt, color: brightOrange),
-                    SizedBox(width: 8),
-                    Text(
-                      "Save to My Brews",
-                      style: TextStyle(
-                        fontSize: 16, // Reduced font size
-                        fontWeight: FontWeight.bold,
-                        color: brightOrange,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -1265,26 +1262,273 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      height: 65, // Fixed height for bottom navigation bar
-      decoration: BoxDecoration(
-        color: darkBrown,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: Offset(0, -2),
+  // Add this method to your _BrewMasterPageState class in brew_master_page.dart
+
+  Widget _buildBrewingGuide() {
+    // Check if brewing is complete
+    if (brewCompleted) {
+      return _buildCompletionScreen();
+    }
+
+    final steps = brewingSteps[selectedMethod] ?? [];
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with method name and back button
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back, color: brightOrange),
+                onPressed: () {
+                  setState(() {
+                    showGuide = false;
+                  });
+                },
+              ),
+              Text(
+                "$selectedMethod Guide",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: brightOrange,
+                ),
+              ),
+            ],
+          ),
+
+          // Progress indicator
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: steps.isEmpty ? 0 : (currentStep + 1) / steps.length,
+                backgroundColor: mediumBrown,
+                valueColor: AlwaysStoppedAnimation<Color>(brightOrange),
+                minHeight: 10,
+              ),
+            ),
+          ),
+
+          // Current step card
+          Container(
+            margin: EdgeInsets.only(bottom: 20),
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  orangeBrown.withOpacity(0.8),
+                  orangeBrown.withOpacity(0.6),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: darkBrown,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          "${currentStep + 1}",
+                          style: TextStyle(
+                            color: brightOrange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Step ${currentStep + 1}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Text(
+                  steps.isNotEmpty ? steps[currentStep] : "No steps available",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Next step button
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: brightOrange,
+              minimumSize: Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                if (currentStep < steps.length - 1) {
+                  currentStep++;
+                } else {
+                  // Last step completed
+                  brewCompleted = true;
+                }
+              });
+            },
+            child: Text(
+              currentStep < steps.length - 1 ? "Next Step" : "Complete Brewing",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: darkBrown,
+              ),
+            ),
+          ),
+
+          if (currentStep > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: brightOrange,
+                  minimumSize: Size(double.infinity, 50),
+                  side: BorderSide(color: brightOrange),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (currentStep > 0) {
+                      currentStep--;
+                    }
+                  });
+                },
+                child: Text(
+                  "Previous Step",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: brightOrange,
+                  ),
+                ),
+              ),
+            ),
+
+          // Coffee and water amount reminder
+          Container(
+            margin: EdgeInsets.only(top: 24),
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: darkBrown.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: brightOrange.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Brew Settings Reminder:",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: brightOrange,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildReminderItem(
+                        Icons.coffee, "Coffee", "$coffeeAmount g"),
+                    _buildReminderItem(
+                        Icons.water_drop, "Water", "$waterAmount ml"),
+                    _buildReminderItem(
+                        Icons.grain, "Grind", recommendedGrindSize),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8.0),
+    );
+  }
+
+  Widget _buildReminderItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, color: brightOrange, size: 20),
+        SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: brightOrange,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: darkBrown, // Set consistent background color
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: darkBrown,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
         child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: darkBrown,
           elevation: 0,
+          type: BottomNavigationBarType.fixed,
           selectedItemColor: brightOrange,
           unselectedItemColor: orangeBrown,
+          showSelectedLabels: true, // Changed to true
+          showUnselectedLabels: true, // Changed to true
           currentIndex: 1, // BrewMaster is index 1
           onTap: (index) {
             if (index == 1) return; // Already on this page
@@ -1305,71 +1549,44 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
             }
 
             Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    nextPage,
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-                  var tween = Tween(begin: begin, end: end)
-                      .chain(CurveTween(curve: curve));
-                  var offsetAnimation = animation.drive(tween);
-                  return SlideTransition(
-                      position: offsetAnimation, child: child);
-                },
-              ),
-            );
+                context, MaterialPageRoute(builder: (context) => nextPage));
           },
-          type: BottomNavigationBarType.fixed,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
           items: [
             BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 32,
-                height: 32,
-                child: SvgPicture.asset(
-                  "assets/my_brews.svg",
-                  colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
-                ),
+              icon: SvgPicture.asset(
+                "assets/my_brews.svg",
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
               ),
-              label: "",
+              label: "Brews",
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 32,
-                height: 32,
-                child: SvgPicture.asset(
-                  "assets/brew_master.svg",
-                  colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
-                ),
+              icon: SvgPicture.asset(
+                "assets/brew_master.svg",
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
               ),
-              label: "",
+              label: "Master",
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 32,
-                height: 32,
-                child: SvgPicture.asset(
-                  "assets/brew_bot.svg",
-                  colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
-                ),
+              icon: SvgPicture.asset(
+                "assets/brew_bot.svg",
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
               ),
-              label: "",
+              label: "Bot",
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 32,
-                height: 32,
-                child: SvgPicture.asset(
-                  "assets/brew_social.svg",
-                  colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
-                ),
+              icon: SvgPicture.asset(
+                "assets/brew_social.svg",
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(orangeBrown, BlendMode.srcIn),
               ),
-              label: "",
+              label: "Social",
             ),
           ],
         ),

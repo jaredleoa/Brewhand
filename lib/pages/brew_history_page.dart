@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:brewhand/models/brew_history.dart';
 import 'package:brewhand/services/brew_data_service.dart';
 import 'package:intl/intl.dart';
+import 'brew_master_page.dart';
 
 class BrewHistoryPage extends StatefulWidget {
   @override
@@ -122,8 +123,11 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
             ),
             onPressed: () {
               Navigator.of(context).pop();
-              // Navigate to Brew Master page
-              // This would typically be handled by your app's navigation system
+              // Explicitly navigate to Brew Master page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BrewMasterPage()),
+              );
             },
           ),
         ],

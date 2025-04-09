@@ -12,6 +12,11 @@ dependencies:
     sdk: flutter
   
   cupertino_icons: ^1.0.8
+
+  #upload image
+  image_picker: ^0.8.7+5
+  path_provider: ^2.0.15
+  cached_network_image: ^3.2.3
   
   # FontAwesome icons for additional icon support
   flutter_vector_icons: ^2.0.0
