@@ -4,6 +4,7 @@ import 'brew_master_page.dart';
 import 'brew_bot_page.dart' as bot;
 import 'brew_social_page.dart' as social;
 import 'package:brewhand/services/brew_data_service.dart';
+import 'package:brewhand/pages/brew_history_page.dart';
 
 class MyBrewsPage extends StatefulWidget {
   @override
@@ -27,7 +28,7 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
     "Flat White",
     "Macchiato",
     "Mocha",
-    "Affogato",
+    "Affogato"
   ];
 
   List<String> coffeeBeans = [
@@ -38,7 +39,7 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
     "Kenya AA",
     "Colombian Supremo",
     "Ethiopian Yirgacheffe",
-    "Sumatra Mandheling",
+    "Sumatra Mandheling"
   ];
 
   void _onItemTapped(int index) {
@@ -65,6 +66,13 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
     );
   }
 
+  void _navigateToBrewHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BrewHistoryPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,49 +89,38 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                     child: CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.white,
-                      child: SvgPicture.asset(
-                        "assets/camera_icon.svg",
-                        width: 50,
-                      ),
+                      child:
+                          SvgPicture.asset("assets/camera_icon.svg", width: 50),
                     ),
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "Jared’s Brew Profile",
+                    "Jared's Brew Profile",
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: orangeBrown,
-                    ),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: orangeBrown),
                   ),
                   Text(
                     "@jaredcoffee",
                     style: TextStyle(
-                      fontSize: 16,
-                      color: orangeBrown.withOpacity(0.8),
-                    ),
+                        fontSize: 16, color: orangeBrown.withOpacity(0.8)),
                   ),
                   SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "900 Following",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: brightOrange,
-                        ),
-                      ),
+                      Text("900 Following",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: brightOrange)),
                       SizedBox(width: 20),
-                      Text(
-                        "3452 Followers",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: brightOrange,
-                        ),
-                      ),
+                      Text("3452 Followers",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: brightOrange)),
                     ],
                   ),
                   SizedBox(height: 10),
@@ -152,10 +149,8 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                           side: BorderSide(color: brightOrange),
                         ),
                         icon: Icon(Icons.person_add, color: brightOrange),
-                        label: Text(
-                          "Add Friends",
-                          style: TextStyle(color: brightOrange),
-                        ),
+                        label: Text("Add Friends",
+                            style: TextStyle(color: brightOrange)),
                       ),
                       SizedBox(width: 10),
                       ElevatedButton.icon(
@@ -165,10 +160,8 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                           side: BorderSide(color: brightOrange),
                         ),
                         icon: Icon(Icons.share, color: brightOrange),
-                        label: Text(
-                          "Share",
-                          style: TextStyle(color: brightOrange),
-                        ),
+                        label: Text("Share",
+                            style: TextStyle(color: brightOrange)),
                       ),
                     ],
                   ),
@@ -181,13 +174,26 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Statistics",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: brightOrange,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Statistics",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: brightOrange,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => _navigateToBrewHistory(context),
+                          icon: Icon(Icons.history, color: brightOrange),
+                          label: Text(
+                            "View History",
+                            style: TextStyle(color: brightOrange),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 10),
                     Wrap(
@@ -195,21 +201,12 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                       runSpacing: 10,
                       children: [
                         _buildStatBox(
-                          "250",
-                          "Coffee Streak",
-                          "assets/coffee_cup.svg",
-                        ),
+                            "250", "Coffee Streak", "assets/coffee_cup.svg"),
                         _buildStatBox(
-                          "23",
-                          "Unique Drinks",
-                          "assets/brew_master.svg",
-                        ),
+                            "23", "Unique Drinks", "assets/brew_master.svg"),
                         _buildStatBox("746", "Coffees Made", "assets/Star.svg"),
                         _buildStatBox(
-                          "7",
-                          "Unique Beans",
-                          "assets/my_brews.svg",
-                        ),
+                            "7", "Unique Beans", "assets/my_brews.svg"),
                       ],
                     ),
                   ],
@@ -294,83 +291,66 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
   void _showProfilePictureDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text("Profile Picture"),
-            content: Text(
-              "Do you want to update or remove your profile picture?",
-            ),
-            actions: [
-              TextButton(onPressed: () {}, child: Text("Remove")),
-              TextButton(onPressed: () {}, child: Text("Update")),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Cancel"),
-              ),
-            ],
-          ),
+      builder: (context) => AlertDialog(
+        title: Text("Profile Picture"),
+        content: Text("Do you want to update or remove your profile picture?"),
+        actions: [
+          TextButton(onPressed: () {}, child: Text("Remove")),
+          TextButton(onPressed: () {}, child: Text("Update")),
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+        ],
+      ),
     );
   }
 
   void _showOrderSelection(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder:
-          (context) => ListView(
-            children:
-                coffeeOrders
-                    .map(
-                      (order) => ListTile(
-                        title: Text(order),
-                        onTap: () {
-                          setState(() => selectedOrder = order);
-                          Navigator.pop(context);
-                        },
-                      ),
-                    )
-                    .toList(),
-          ),
+      builder: (context) => ListView(
+        children: coffeeOrders
+            .map((order) => ListTile(
+                  title: Text(order),
+                  onTap: () {
+                    setState(() => selectedOrder = order);
+                    Navigator.pop(context);
+                  },
+                ))
+            .toList(),
+      ),
     );
   }
 
   void _showBeanSelection(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder:
-          (context) => ListView(
-            children:
-                coffeeBeans
-                    .map(
-                      (bean) => ListTile(
-                        title: Text(bean),
-                        onTap: () {
-                          setState(() => selectedBean = bean);
-                          Navigator.pop(context);
-                        },
-                      ),
-                    )
-                    .toList(),
-          ),
+      builder: (context) => ListView(
+        children: coffeeBeans
+            .map((bean) => ListTile(
+                  title: Text(bean),
+                  onTap: () {
+                    setState(() => selectedBean = bean);
+                    Navigator.pop(context);
+                  },
+                ))
+            .toList(),
+      ),
     );
   }
 
   void _showAddFriendsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text("Add Friends"),
-            content: TextField(
-              decoration: InputDecoration(labelText: "Enter Username"),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Cancel"),
-              ),
-              TextButton(onPressed: () {}, child: Text("Add")),
-            ],
-          ),
+      builder: (context) => AlertDialog(
+        title: Text("Add Friends"),
+        content:
+            TextField(decoration: InputDecoration(labelText: "Enter Username")),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: Text("Cancel")),
+          TextButton(onPressed: () {}, child: Text("Add")),
+        ],
+      ),
     );
   }
 
@@ -383,13 +363,9 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
     return Container(
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: brightOrange,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontWeight: FontWeight.bold, color: darkBrown),
-      ),
+          color: brightOrange, borderRadius: BorderRadius.circular(10)),
+      child: Text(text,
+          style: TextStyle(fontWeight: FontWeight.bold, color: darkBrown)),
     );
   }
 
@@ -402,7 +378,7 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
         gradient: LinearGradient(
           colors: [
             brightOrange.withOpacity(0.2),
-            brightOrange.withOpacity(0.6),
+            brightOrange.withOpacity(0.6)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -418,28 +394,19 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
-            iconPath,
-            width: 40,
-            colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
-          ),
+          SvgPicture.asset(iconPath,
+              width: 40,
+              colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn)),
           SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              color: brightOrange,
-            ),
-          ),
+          Text(value,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: brightOrange)),
           SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 16, color: Colors.white.withOpacity(0.8))),
         ],
       ),
     );

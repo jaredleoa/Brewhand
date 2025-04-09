@@ -21,6 +21,8 @@ dependencies:
 
   # For sharing content
   share_plus: ^7.2.1
+
+  intl: ^0.18.1 #(for date formatting in brew_history_page.dart)
   
   # For local storage
   shared_preferences: ^2.2.2

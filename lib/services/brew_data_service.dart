@@ -1,6 +1,7 @@
-import 'package:brewhand/models/brew_history.dart';
+import 'package:brewhand/pages/brew_history_page.dart';
 import 'package:brewhand/models/user_stats.dart';
 import 'package:brewhand/models/brew_post.dart';
+import 'package:brewhand/models/brew_history.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
