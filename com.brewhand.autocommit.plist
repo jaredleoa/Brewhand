@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.brewhand.autocommit</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/jaredleonard/Documents/Coding/FYP/brewhand/auto_commit.sh</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>3600</integer> <!-- Run every hour (3600 seconds) -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/Users/jaredleonard/Documents/Coding/FYP/brewhand/auto_commit.log</string>
+    <key>StandardOutPath</key>
+    <string>/Users/jaredleonard/Documents/Coding/FYP/brewhand/auto_commit.log</string>
+</dict>
+</plist>

@@ -1,17 +1,13 @@
-import 'package:brewhand/pages/brew_history_page.dart';
+import 'package:brewhand/models/brew_history.dart';
 import 'package:brewhand/models/user_stats.dart';
 import 'package:brewhand/models/brew_post.dart';
-import 'package:brewhand/models/brew_history.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
+import 'supabase_service.dart';
 
 class BrewDataService {
-  static const String _brewHistoryKey = 'brew_history';
-  static const String _userStatsKey = 'user_stats';
-  static const String _brewSocialPostsKey = 'brew_social_posts';
-
   final Uuid _uuid = Uuid();
+  final SupabaseService _supabaseService = SupabaseService();
 
   // Singleton pattern
   static final BrewDataService _instance = BrewDataService._internal();
@@ -22,24 +18,18 @@ class BrewDataService {
 
   BrewDataService._internal();
 
-  // Brew History Methods
+  // Brew History Methods using Supabase
   Future<List<BrewHistory>> getBrewHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? historyJson = prefs.getString(_brewHistoryKey);
-
-    if (historyJson == null) {
+    try {
+      return await _supabaseService.getBrewHistory();
+    } catch (e) {
+      debugPrint('Error getting brew history: $e');
       return [];
     }
-
-    List<dynamic> historyList = jsonDecode(historyJson);
-    return historyList.map((item) => BrewHistory.fromJson(item)).toList();
   }
 
   Future<void> saveBrewHistory(BrewHistory brew) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      List<BrewHistory> history = await getBrewHistory();
-
       // Generate a unique ID if needed
       BrewHistory brewWithId = brew.id.isEmpty
           ? BrewHistory(
@@ -55,274 +45,157 @@ class BrewDataService {
             )
           : brew;
 
-      history.add(brewWithId);
-
-      // Save updated history
-      await prefs.setString(
-          _brewHistoryKey, jsonEncode(history.map((e) => e.toJson()).toList()));
-
-      // Update user stats (ensure this updates properly)
-      UserStats stats = await getUserStats();
-      stats.updateWithNewBrew(brewWithId);
-      // Force increase the stats if needed for demonstration
-      stats.coffeesMade++;
-      // Check if this is a new bean and update uniqueBeans
-      if (!stats.beansUsed.contains(brewWithId.beanType)) {
-        stats.beansUsed.add(brewWithId.beanType);
-        stats.uniqueBeans = stats.beansUsed.length;
+      // Add the brew to Supabase
+      await _supabaseService.addBrewHistory(brewWithId);
+      
+      // Create social post if desired
+      if (brewWithId.rating >= 4) { // Only share highly rated brews
+        await _createSocialPost(brewWithId);
       }
-      // Check if this is a new method and update uniqueDrinks
-      if (!stats.methodsUsed.contains(brewWithId.brewMethod)) {
-        stats.methodsUsed.add(brewWithId.brewMethod);
-        stats.uniqueDrinks = stats.methodsUsed.length;
-      }
-      // Update streak
-      stats.coffeeStreak++;
 
-      await saveUserStats(stats);
-      print("Updated stats: ${stats.toJson()}");
-
-      // Create social post
-      await _createSocialPost(brewWithId);
-
-      print("Saved brew history successfully: ${history.length} entries");
-
-      return;
+      debugPrint("Saved brew history successfully!");
     } catch (e) {
-      print("Error saving brew history: $e");
+      debugPrint("Error saving brew history: $e");
       // Consider showing an error dialog to user
+      rethrow; // Let calling code handle the error
     }
   }
 
-  // User Stats Methods
-  Future<UserStats> getUserStats() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? statsJson = prefs.getString(_userStatsKey);
-
-    if (statsJson == null) {
-      return UserStats();
+  // User Stats Methods using Supabase
+  Future<UserStats?> getUserStats() async {
+    try {
+      return await _supabaseService.getUserStats();
+    } catch (e) {
+      debugPrint('Error getting user stats: $e');
+      return null;
     }
-
-    return UserStats.fromJson(jsonDecode(statsJson));
   }
 
-  Future<void> saveUserStats(UserStats stats) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userStatsKey, jsonEncode(stats.toJson()));
-  }
-
+  // This method is now handled by Supabase triggers or directly in the saveBrewHistory method
   Future<void> _updateUserStats(BrewHistory brew) async {
-    UserStats stats = await getUserStats();
+    // Get current stats
+    UserStats? stats = await getUserStats();
+    if (stats == null) {
+      stats = UserStats(); // Create new stats if none exist
+    }
+    
+    // Update stats with new brew
     stats.updateWithNewBrew(brew);
-    await saveUserStats(stats);
+    
+    // Save updated stats to Supabase
+    await _supabaseService.updateUserStats(stats);
   }
 
-  // Social Post Methods
+  // Social Post Methods using Supabase
   Future<List<BrewPost>> getSocialPosts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? postsJson = prefs.getString(_brewSocialPostsKey);
-
-    if (postsJson == null) {
+    try {
+      return await _supabaseService.getBrewPosts();
+    } catch (e) {
+      debugPrint('Error getting social posts: $e');
       return [];
     }
-
-    List<dynamic> postsList = jsonDecode(postsJson);
-    return postsList.map((item) => BrewPost.fromJson(item)).toList();
   }
 
   Future<void> _createSocialPost(BrewHistory brew) async {
-    // In a real app, you would get this from user data
-    const String userId = "user123";
-    const String username = "jaredcoffee";
-
+    if (!_supabaseService.isSignedIn) return;
+    
+    // Get current user from Supabase
+    final user = _supabaseService.currentUser;
+    if (user == null) return;
+    
+    // Create a post with the current user's information and brew details
     BrewPost post = BrewPost(
       id: _uuid.v4(),
-      userId: userId,
-      username: username,
+      userId: user.id,
+      postDate: DateTime.now(),
       brewMethod: brew.brewMethod,
       beanType: brew.beanType,
-      postDate: DateTime.now(),
+      grindSize: brew.grindSize,
+      waterAmount: brew.waterAmount,
+      coffeeAmount: brew.coffeeAmount,
       likes: 0,
       comments: [],
+      // You could add an image here if available
     );
-
-    List<BrewPost> posts = await getSocialPosts();
-    posts.add(post);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _brewSocialPostsKey, jsonEncode(posts.map((e) => e.toJson()).toList()));
+    
+    debugPrint('Creating social post for brew: ${brew.id}');
+    
+    try {
+      await _supabaseService.addBrewPost(post);
+      debugPrint('Social post created successfully');
+    } catch (e) {
+      debugPrint('Error creating social post: $e');
+    }
   }
 
+  // This would need to be updated to work with Supabase
+  // You would need to implement this in the SupabaseService
   Future<void> likePost(String postId) async {
-    List<BrewPost> posts = await getSocialPosts();
-
-    for (int i = 0; i < posts.length; i++) {
-      if (posts[i].id == postId) {
-        BrewPost updatedPost = BrewPost(
-          id: posts[i].id,
-          userId: posts[i].userId,
-          username: posts[i].username,
-          brewMethod: posts[i].brewMethod,
-          beanType: posts[i].beanType,
-          postDate: posts[i].postDate,
-          likes: posts[i].likes + 1,
-          comments: posts[i].comments,
-          image: posts[i].image,
-        );
-
-        posts[i] = updatedPost;
-        break;
-      }
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _brewSocialPostsKey, jsonEncode(posts.map((e) => e.toJson()).toList()));
+    // This would be implemented using Supabase's RPC or Row-Level Security features
+    // For now, this is a placeholder
+    debugPrint('Like post functionality will be implemented with Supabase');
   }
 
+  // This would need to be updated to work with Supabase
+  // You would need to implement this in the SupabaseService
   Future<void> addComment(String postId, String comment) async {
-    List<BrewPost> posts = await getSocialPosts();
-
-    for (int i = 0; i < posts.length; i++) {
-      if (posts[i].id == postId) {
-        List<String> updatedComments = List.from(posts[i].comments);
-        updatedComments.add(comment);
-
-        BrewPost updatedPost = BrewPost(
-          id: posts[i].id,
-          userId: posts[i].userId,
-          username: posts[i].username,
-          brewMethod: posts[i].brewMethod,
-          beanType: posts[i].beanType,
-          postDate: posts[i].postDate,
-          likes: posts[i].likes,
-          comments: updatedComments,
-          image: posts[i].image,
-        );
-
-        posts[i] = updatedPost;
-        break;
-      }
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _brewSocialPostsKey, jsonEncode(posts.map((e) => e.toJson()).toList()));
+    // This would be implemented using Supabase's RPC or Row-Level Security features
+    // For now, this is a placeholder
+    debugPrint('Comment functionality will be implemented with Supabase');
   }
 
-  // Mock data generation for testing
+  // Mock data generation for testing with Supabase
   Future<void> generateMockData() async {
-    // Clear existing data
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_brewHistoryKey);
-    await prefs.remove(_userStatsKey);
-    await prefs.remove(_brewSocialPostsKey);
-
+    if (!_supabaseService.isSignedIn) {
+      debugPrint('User not signed in. Cannot generate mock data.');
+      return;
+    }
+    
+    // Clear any existing user data
+    await _supabaseService.clearUserData();
+    
     // Create some mock brew history entries
-    List<BrewHistory> mockHistory = [
+    final mockBrews = [
       BrewHistory(
         id: _uuid.v4(),
-        brewMethod: 'French Press',
-        beanType: 'Ethiopian Yirgacheffe',
-        grindSize: 'Coarse',
-        waterAmount: 350,
-        coffeeAmount: 21,
-        brewDate: DateTime.now().subtract(Duration(days: 3)),
-        rating: 4,
-        notes: 'Rich and fruity with hints of blueberry. Very nice!',
-      ),
-      BrewHistory(
-        id: _uuid.v4(),
-        brewMethod: 'Pour Over',
-        beanType: 'Colombian Supremo',
+        brewMethod: 'V60',
+        beanType: 'Ethiopia Yirgacheffe',
         grindSize: 'Medium-Fine',
         waterAmount: 300,
         coffeeAmount: 18,
-        brewDate: DateTime.now().subtract(Duration(days: 2)),
-        rating: 5,
-        notes: 'Perfect balance of acidity and sweetness.',
+        brewDate: DateTime.now().subtract(const Duration(days: 3)),
+        rating: 4,
+        notes: 'Good balance, fruity undertones',
       ),
       BrewHistory(
         id: _uuid.v4(),
-        brewMethod: 'AeroPress',
-        beanType: 'Kenya AA',
-        grindSize: 'Fine',
-        waterAmount: 250,
-        coffeeAmount: 17,
-        brewDate: DateTime.now().subtract(Duration(days: 1)),
-        rating: 3,
-        notes: 'A bit too acidic for my taste, but still good.',
-      ),
-    ];
-
-    // Save mock history
-    await prefs.setString(_brewHistoryKey,
-        jsonEncode(mockHistory.map((e) => e.toJson()).toList()));
-
-    // Create mock user stats
-    UserStats mockStats = UserStats(
-      coffeeStreak: 3,
-      coffeesMade: 746,
-      uniqueDrinks: 23,
-      uniqueBeans: 7,
-      beansUsed: [
-        'Ethiopian Yirgacheffe',
-        'Colombian Supremo',
-        'Kenya AA',
-        'Sumatra Mandheling',
-        'Brazil Santos',
-        'Guatemala Antigua',
-        'Costa Rica Tarrazu'
-      ],
-      methodsUsed: [
-        'French Press',
-        'Pour Over',
-        'AeroPress',
-        'Espresso',
-        'Cold Brew'
-      ],
-    );
-
-    // Save mock stats
-    await prefs.setString(_userStatsKey, jsonEncode(mockStats.toJson()));
-
-    // Create mock social posts
-    List<BrewPost> mockPosts = [
-      BrewPost(
-        id: _uuid.v4(),
-        userId: 'user456',
-        username: 'coffeemaster',
-        brewMethod: 'Espresso',
-        beanType: 'Italian Roast',
-        postDate: DateTime.now().subtract(Duration(hours: 5)),
-        likes: 12,
-        comments: ['Looks delicious!', 'What machine did you use?'],
-      ),
-      BrewPost(
-        id: _uuid.v4(),
-        userId: 'user789',
-        username: 'brewqueen',
-        brewMethod: 'Cold Brew',
-        beanType: 'Sumatra Mandheling',
-        postDate: DateTime.now().subtract(Duration(hours: 3)),
-        likes: 8,
-        comments: ['Perfect for summer!'],
-      ),
-      BrewPost(
-        id: _uuid.v4(),
-        userId: 'user123',
-        username: 'jaredcoffee',
-        brewMethod: 'Pour Over',
+        brewMethod: 'Chemex',
         beanType: 'Colombian Supremo',
-        postDate: DateTime.now().subtract(Duration(hours: 2)),
-        likes: 5,
-        comments: [],
+        grindSize: 'Medium-Coarse',
+        waterAmount: 400,
+        coffeeAmount: 26,
+        brewDate: DateTime.now().subtract(const Duration(days: 1)),
+        rating: 5,
+        notes: 'Excellent clarity, sweet finish',
+      ),
+      BrewHistory(
+        id: _uuid.v4(),
+        brewMethod: 'Aeropress',
+        beanType: 'Sumatra Mandheling',
+        grindSize: 'Fine',
+        waterAmount: 220,
+        coffeeAmount: 17,
+        brewDate: DateTime.now().subtract(const Duration(days: 7)),
+        rating: 3,
+        notes: 'Earthy and bold, but a bit too intense',
       ),
     ];
 
-    // Save mock social posts
-    await prefs.setString(_brewSocialPostsKey,
-        jsonEncode(mockPosts.map((e) => e.toJson()).toList()));
+    // Add each brew to the history
+    for (var brew in mockBrews) {
+      await _supabaseService.addBrewHistory(brew);
+    }
+
+    debugPrint('Generated mock data successfully!');
   }
 }

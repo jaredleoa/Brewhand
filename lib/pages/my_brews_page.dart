@@ -3,18 +3,20 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'brew_master_page.dart';
 import 'brew_bot_page.dart' as bot;
 import 'brew_social_page.dart' as social;
-import 'package:brewhand/services/brew_data_service.dart';
+import 'package:brewhand/services/supabase_service.dart';
 import 'package:brewhand/pages/brew_history_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:brewhand/models/user_profile.dart';
+import 'package:brewhand/models/user_stats.dart';
 
 class MyBrewsPage extends StatefulWidget {
   @override
   _MyBrewsPageState createState() => _MyBrewsPageState();
 }
 
-class _MyBrewsPageState extends State<MyBrewsPage> {
+class _MyBrewsPageState extends State<MyBrewsPage> with WidgetsBindingObserver {
   final Color darkBrown = Color(0xFF3E1F00);
   final Color orangeBrown = Color(0xFFA95E04);
   final Color brightOrange = Color(0xFFFF9800);
@@ -24,6 +26,12 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
   String selectedBean = "Kenya";
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
+  final SupabaseService _supabaseService = SupabaseService();
+  
+  // Add variables to store user profile and stats
+  UserProfile? _userProfile;
+  UserStats? _userStats;
+  bool _isLoading = true;
 
   List<String> coffeeOrders = [
     "Espresso",
@@ -57,7 +65,64 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadProfileImage();
+    _loadUserData(); // Add method to load user profile and stats
+  }
+  
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh data when app is resumed
+      _loadUserData();
+    }
+  }
+  
+  // Load user profile and stats data
+  Future<void> _loadUserData() async {
+    try {
+      // Load user profile
+      final profile = await _supabaseService.getUserProfile();
+      if (profile != null && mounted) {
+        setState(() {
+          _userProfile = profile;
+          // Update selected values if they exist in profile
+          if (profile.favoriteBrew != null && profile.favoriteBrew!.isNotEmpty) {
+            // Split favorite brew if it contains both order and bean
+            if (profile.favoriteBrew!.contains('(')) {
+              final parts = profile.favoriteBrew!.split('(');
+              selectedOrder = parts[0].trim();
+              selectedBean = parts[1].replaceAll(')', '').trim();
+            } else {
+              selectedOrder = profile.favoriteBrew!;
+            }
+          }
+        });
+      }
+      
+      // Load user stats
+      final stats = await _supabaseService.getUserStats();
+      print('Loaded user stats: $stats'); // Debug logging
+      if (stats != null && mounted) {
+        setState(() {
+          _userStats = stats;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadProfileImage() async {
@@ -150,18 +215,155 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
       MaterialPageRoute(builder: (context) => nextPage),
     );
   }
+  
+  // Refresh data when returning from another screen
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      await _loadUserData();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _navigateToBrewHistory(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => BrewHistoryPage()),
+    ).then((_) {
+      // Refresh data when returning from BrewHistoryPage
+      _refreshData();
+    });
+  }
+
+  // Get the title for the app bar based on selected tab
+  String _getAppBarTitle() {
+    switch (_selectedIndex) {
+      case 0:
+        return 'My Brews';
+      case 1:
+        return 'Brew Master';
+      case 2:
+        return 'BrewBot';
+      case 3:
+        return 'Brew Social';
+      default:
+        return 'BrewHand';
+    }
+  }
+
+  // Show settings menu with logout option
+  void _showSettingsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: darkBrown,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.logout, color: brightOrange),
+                title: Text('Log Out', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  _handleLogout();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: brightOrange),
+                title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Edit Profile feature coming soon!')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.color_lens, color: brightOrange),
+                title: Text('App Theme', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context); // Close the bottom sheet
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Theme settings coming soon!')),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+  
+  // Handle logout action
+  Future<void> _handleLogout() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: darkBrown,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: brightOrange),
+                SizedBox(height: 20),
+                Text('Logging out...', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    
+    // Perform logout
+    try {
+      await _supabaseService.signOut();
+      
+      // Close dialog and navigate to login page
+      Navigator.of(context).pop(); // Close dialog
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      // Close dialog and show error
+      Navigator.of(context).pop(); // Close dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error logging out: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: darkBrown,
+      appBar: AppBar(
+        backgroundColor: darkBrown,
+        elevation: 0,
+        title: Text(
+          _getAppBarTitle(),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        actions: _selectedIndex == 0 ? [
+          // Only show settings button on My Brews tab
+          IconButton(
+            icon: Icon(Icons.settings, color: Colors.white),
+            onPressed: () => _showSettingsMenu(context),
+          ),
+        ] : null,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -169,42 +371,58 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
             child: Column(
               children: [
                 // Profile Section
-                GestureDetector(
-                  onTap: () => _showProfilePictureDialog(context),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: _profileImage != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: Image.file(
-                              _profileImage!,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : SvgPicture.asset(
-                            "assets/camera_icon.svg",
-                            width: 50,
-                            colorFilter:
-                                ColorFilter.mode(orangeBrown, BlendMode.srcIn),
-                          ),
+                _isLoading 
+                ? Center(child: CircularProgressIndicator(color: brightOrange))
+                : Column(children: [
+                  GestureDetector(
+                    onTap: () => _showProfilePictureDialog(context),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.white,
+                      child: _userProfile?.avatarUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: Image.network(
+                                _userProfile!.avatarUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => 
+                                  Icon(Icons.person, size: 50, color: orangeBrown),
+                              ),
+                            )
+                          : _profileImage != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(50),
+                                  child: Image.file(
+                                    _profileImage!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : SvgPicture.asset(
+                                  "assets/camera_icon.svg",
+                                  width: 50,
+                                  colorFilter:
+                                      ColorFilter.mode(orangeBrown, BlendMode.srcIn),
+                                ),
+                    ),
                   ),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "Jared's Brew Profile",
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: orangeBrown),
-                ),
-                Text(
-                  "@jaredcoffee",
-                  style: TextStyle(
-                      fontSize: 16, color: orangeBrown.withOpacity(0.8)),
-                ),
+                  SizedBox(height: 10),
+                  Text(
+                    "${_userProfile?.fullName ?? _userProfile?.username ?? 'User'}\'s Brew Profile",
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: orangeBrown),
+                  ),
+                  Text(
+                    "@${_userProfile?.username ?? 'anonymous'}",
+                    style: TextStyle(
+                        fontSize: 16, color: orangeBrown.withOpacity(0.8)),
+                  ),
+                ]),
                 SizedBox(height: 10),
 
                 // Following and Followers counts
@@ -270,25 +488,84 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 15), // Reduced from 30 to 15
 
-                // Statistics section
-                _buildStatisticsHeader(),
-                GridView.count(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildStatBox(
-                        "250", "Coffee Streak", "assets/coffee_cup.svg"),
-                    _buildStatBox(
-                        "23", "Unique Drinks", "assets/brew_master.svg"),
-                    _buildStatBox("746", "Coffees Made", "assets/Star.svg"),
-                    _buildStatBox("7", "Unique Beans", "assets/my_brews.svg"),
-                  ],
+                // Statistics section with header and grid in a container with gradient background
+                Container(
+                  margin: EdgeInsets.only(top: 20),
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [orangeBrown.withOpacity(0.35), orangeBrown.withOpacity(0.15)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      // Header row with View History button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Statistics",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => _navigateToBrewHistory(context),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: darkBrown.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: brightOrange.withOpacity(0.3), width: 1.5),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.history, color: brightOrange, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "View History",
+                                    style: TextStyle(
+                                      color: brightOrange, 
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      SizedBox(height: 15),
+                      
+                      // Stats grid
+                      _isLoading
+                      ? Center(child: CircularProgressIndicator(color: brightOrange))
+                      : GridView.count(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        shrinkWrap: true,
+                        childAspectRatio: 0.9,
+                        physics: NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildStatBox("${_userStats?.coffeeStreak ?? 0}", "Coffee Streak", "assets/coffee_cup.svg"),
+                          _buildStatBox("${_userStats?.uniqueDrinks ?? 0}", "Unique Drinks", "assets/brew_master.svg"),
+                          _buildStatBox("${_userStats?.coffeesMade ?? 0}", "Coffees Made", "assets/Star.svg"),
+                          _buildStatBox("${_userStats?.uniqueBeans ?? 0}", "Unique Beans", "assets/my_brews.svg"),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -367,53 +644,7 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
     );
   }
 
-  Widget _buildStatisticsHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              "Statistics",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: brightOrange,
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: darkBrown.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: brightOrange.withOpacity(0.3)),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => _navigateToBrewHistory(context),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Row(
-                    children: [
-                      Icon(Icons.history, color: brightOrange, size: 16),
-                      SizedBox(width: 4),
-                      Text(
-                        "View History",
-                        style: TextStyle(color: brightOrange, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Removed unused statistics header method
 
   void _showOrderSelection(BuildContext context) {
     TextEditingController customOrderController = TextEditingController();
@@ -852,42 +1083,56 @@ class _MyBrewsPageState extends State<MyBrewsPage> {
 
   Widget _buildStatBox(String value, String label, String iconPath) {
     return Container(
-      width: 160,
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
         gradient: LinearGradient(
-          colors: [
-            brightOrange.withOpacity(0.2),
-            brightOrange.withOpacity(0.6)
-          ],
+          colors: [orangeBrown.withOpacity(0.6), orangeBrown.withOpacity(0.3)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(2, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(iconPath,
-              width: 40,
-              colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn)),
-          SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: brightOrange)),
-          SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 16, color: Colors.white.withOpacity(0.8))),
+          // Larger icon container
+          Container(
+            width: 60,
+            height: 60,
+            alignment: Alignment.center,
+            child: SvgPicture.asset(
+              iconPath,
+              width: 42,  // Larger icon size
+              height: 42, // Larger icon size
+              colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
+            ),
+          ),
+          SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: brightOrange,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
         ],
       ),
     );

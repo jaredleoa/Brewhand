@@ -1,0 +1,7 @@
+// This file contains custom Xcode configuration overrides
+// Used to fix the -G compiler flag issue
+
+CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO
+COMPILER_INDEX_STORE_ENABLE = NO
+OTHER_CFLAGS = $(inherited) -Wno-nullability-completeness -Wno-error=incompatible-pointer-types
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY=0

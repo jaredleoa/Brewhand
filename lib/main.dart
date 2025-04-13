@@ -2,26 +2,121 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'pages/my_brews_page.dart';
 import 'pages/brew_master_page.dart' as master;
-import 'pages/brew_bot_page.dart';
-import 'pages/brew_social_page.dart';
+import 'pages/auth/login_page.dart';
+import 'pages/auth/profile_setup_page.dart';
 
-void main() {
-  runApp(BrewHandApp());
+// Import Supabase service
+import 'services/supabase_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase
+  final supabaseService = SupabaseService();
+  await supabaseService.initialize();
+
+  runApp(const BrewHandApp());
 }
 
-class BrewHandApp extends StatelessWidget {
+class BrewHandApp extends StatefulWidget {
+  const BrewHandApp({Key? key}) : super(key: key);
+
+  @override
+  State<BrewHandApp> createState() => _BrewHandAppState();
+}
+
+class _BrewHandAppState extends State<BrewHandApp> {
+  final SupabaseService _supabaseService = SupabaseService();
+  bool _isLoading = true;
+  bool _needsProfileSetup = false;
+  bool _isAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserStatus();
+  }
+
+  Future<void> _checkUserStatus() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Check if user is authenticated
+    _isAuthenticated = _supabaseService.isSignedIn;
+
+    if (_isAuthenticated) {
+      // Check if user has a profile
+      final profile = await _supabaseService.getUserProfile();
+      _needsProfileSetup = profile == null;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      title: 'BrewHand',
+      theme: ThemeData(
+        primaryColor: const Color(0xFF3E1F00),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3E1F00),
+          primary: const Color(0xFF3E1F00),
+          secondary: const Color(0xFFFFB74D),
+        ),
+      ),
+      home: _isLoading
+          ? _buildLoadingScreen()
+          : _getInitialScreen(),
       routes: {
+        '/home': (context) => MyBrewsPage(),
+        '/login': (context) => const LoginPage(),
+        '/profile_setup': (context) => const ProfileSetupPage(),
         '/myBrews': (context) => MyBrewsPage(),
         '/brewMaster': (context) => master.BrewMasterPage(),
-        '/brewBot': (context) => BrewBotPage(),
-        '/brewSocial': (context) => BrewSocialPage(),
       },
     );
+  }
+  
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF3E1F00),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Logo or app name
+            const Text(
+              'BrewHand',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Loading indicator
+            const CircularProgressIndicator(
+              color: Color(0xFFFFB74D),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _getInitialScreen() {
+    if (!_isAuthenticated) {
+      return const LoginPage();
+    } else if (_needsProfileSetup) {
+      return const ProfileSetupPage();
+    } else {
+      return MyBrewsPage();
+    }
   }
 }
 

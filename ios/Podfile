@@ -1,5 +1,11 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '12.0'
+source 'https://github.com/CocoaPods/Specs.git'
+
+platform :ios, '13.0'
+
+# Disable undefined behavior sanitizers to fix -G compiler flag issues
+ENV['ASAN_OPTIONS'] = 'detect_container_overflow=0'
+ENV['UBSAN_OPTIONS'] = 'suppressions=Undefined'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -37,7 +43,42 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  # Direct targeting of known problematic pods
+  target_pod_names = [
+    'gRPC-Core', 'gRPC-C++', 'FirebaseFirestore', 'FirebaseFirestoreInternal', 
+    'BoringSSL-GRPC', 'abseil', 'Libuv-gRPC'
+  ]
+  
+  # Remove the -G flag explicitly from problematic pods
+  installer.pods_project.targets.each do |target|
+    if target_pod_names.include?(target.name)
+      puts "🔧 Fixing -G flag issue in #{target.name}"
+      target.build_configurations.each do |config|
+        # Complete removal of all sanitizers
+        config.build_settings['ENABLE_UNDEFINED_BEHAVIOR_SANITIZER'] = 'NO'
+        config.build_settings['CLANG_UNDEFINED_BEHAVIOR_SANITIZER_INTEGER'] = 'NO'
+        config.build_settings['CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY'] = 'NO'
+        config.build_settings['CLANG_ADDRESS_SANITIZER'] = 'NO'
+        
+        # Force compiler flags without -G
+        config.build_settings.delete('OTHER_CFLAGS') 
+        config.build_settings.delete('OTHER_CPLUSPLUSFLAGS')
+        
+        # Set specific compiler flags that won't trigger the issue
+        config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-shorten-64-to-32 -Wno-comma -Wno-unreachable-code -Wno-conditional-uninitialized -Wno-deprecated-declarations'
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -std=gnu++14 -Wno-deprecated-declarations'
+      end
+    end
+  end
+  
+  # Apply Flutter settings to all pods
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+    end
   end
 end

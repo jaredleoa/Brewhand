@@ -17,6 +17,14 @@ dependencies:
   image_picker: ^0.8.7+5
   path_provider: ^2.0.15
   cached_network_image: ^3.2.3
+
+  # Supabase (Firebase alternative)
+  supabase_flutter: ^2.3.4   # Core Supabase functionality
+  postgrest: ^2.0.1         # Database client
+  gotrue: ^2.4.1           # Authentication client
+  storage_client: ^2.0.1    # Storage client
+  realtime_client: ^2.0.0   # Realtime updates
+  supabase_auth_ui: ^0.3.0  # UI components for auth
   
   # FontAwesome icons for additional icon support
   flutter_vector_icons: ^2.0.0
@@ -51,3 +59,4 @@ flutter:
     - assets/brew_social.svg
     - assets/coffee_cup.svg
     - assets/Star.svg
+    - assets/camera_icon.svg
