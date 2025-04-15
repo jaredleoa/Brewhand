@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  dialog_flowtter: ^0.3.3
   
   cupertino_icons: ^1.0.8
 
@@ -60,3 +61,7 @@ flutter:
     - assets/coffee_cup.svg
     - assets/Star.svg
     - assets/camera_icon.svg
+    - assets/pour_over_icon.svg
+    - assets/espresso_icon.svg
+    - assets/moka_pot_icon.svg
+    - assets/cold_brew_icon.svg

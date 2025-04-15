@@ -10,8 +10,25 @@ import 'package:brewhand/pages/brew_bot_page.dart';
 import 'package:brewhand/pages/brew_social_page.dart';
 import 'package:brewhand/widgets/brew_timer.dart';
 import 'package:uuid/uuid.dart';
+import 'package:brewhand/widgets/animated_scale.dart';
 
 class BrewMasterPage extends StatefulWidget {
+  // Optional parameters for the "Brew Again" functionality
+  final String? initialBrewMethod;
+  final String? initialBeanType;
+  final String? initialGrindSize;
+  final int? initialWaterAmount;
+  final int? initialCoffeeAmount;
+
+  const BrewMasterPage({
+    Key? key,
+    this.initialBrewMethod,
+    this.initialBeanType,
+    this.initialGrindSize,
+    this.initialWaterAmount,
+    this.initialCoffeeAmount,
+  }) : super(key: key);
+
   @override
   _BrewMasterPageState createState() => _BrewMasterPageState();
 }
@@ -36,39 +53,55 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
 
   // Available brewing methods with recommended grind size
   final List<Map<String, dynamic>> brewingMethods = [
-    {
-      'name': 'French Press',
-      'icon': 'assets/coffee_cup.svg',
-      'description': 'Rich, full-bodied coffee with a simple brewing process',
-      'time': '4 min',
-      'difficulty': 'Easy',
-      'recommendedGrind': 'Coarse',
-    },
-    {
-      'name': 'Pour Over',
-      'icon': 'assets/coffee_cup.svg',
-      'description': 'Clean, bright coffee with clear flavors',
-      'time': '3 min',
-      'difficulty': 'Medium',
-      'recommendedGrind': 'Medium-Fine',
-    },
-    {
-      'name': 'AeroPress',
-      'icon': 'assets/coffee_cup.svg',
-      'description': 'Smooth coffee with versatile brewing options',
-      'time': '2 min',
-      'difficulty': 'Easy',
-      'recommendedGrind': 'Fine',
-    },
-    {
-      'name': 'Espresso',
-      'icon': 'assets/coffee_cup.svg',
-      'description': 'Concentrated coffee with rich crema',
-      'time': '1 min',
-      'difficulty': 'Hard',
-      'recommendedGrind': 'Extra Fine',
-    },
-  ];
+  {
+    'name': 'French Press',
+    'description': 'Rich, full-bodied coffee with a simple brewing process',
+    'time': '4 min',
+    'difficulty': 'Easy',
+    'recommendedGrind': 'Coarse',
+    'flavorNotes': 'Full-bodied, High Extraction',
+  },
+  {
+    'name': 'Pour Over',
+    'description': 'Clean, bright coffee with clear flavors',
+    'time': '3 min',
+    'difficulty': 'Medium',
+    'recommendedGrind': 'Medium-Fine',
+    'flavorNotes': 'Clean, Bright Acidity',
+  },
+  {
+    'name': 'AeroPress',
+    'description': 'Smooth coffee with versatile brewing options',
+    'time': '2 min',
+    'difficulty': 'Easy',
+    'recommendedGrind': 'Fine',
+    'flavorNotes': 'Versatile, Low Acidity',
+  },
+  {
+    'name': 'Espresso',
+    'description': 'Concentrated coffee with rich crema',
+    'time': '1 min',
+    'difficulty': 'Hard',
+    'recommendedGrind': 'Extra Fine',
+    'flavorNotes': 'Concentrated, Rich Crema',
+  },
+  {
+    'name': 'Moka Pot',
+    'description': 'Stovetop coffee with rich, robust flavor',
+    'time': '5 min',
+    'difficulty': 'Medium',
+    'recommendedGrind': 'Fine',
+    'flavorNotes': 'Strong, Intense Body',
+  },
+  {
+    'name': 'Cold Brew',
+    'description': 'Smooth, refreshing coffee brewed cold over hours',
+    'time': '8 hr',
+    'difficulty': 'Easy',
+    'recommendedGrind': 'Coarse',
+    'flavorNotes': 'Smooth, Very Low Acidity',
+  },
+];
 
   // Helper method to get beans for the selected region
   List<String> _getBeansForSelectedRegion() {
@@ -85,6 +118,9 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   String selectedMethod = '';
   int currentStep = 0;
   bool brewCompleted = false;
+
+  // Difficulty filter for brewing methods
+  String difficultyFilter = 'All';
 
   // Step lists for different brewing methods
   Map<String, List<Map<String, dynamic>>> brewingSteps = {
@@ -274,12 +310,135 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
         'timer': false
       },
     ],
+    'Moka Pot': [
+      {
+        'text': 'Boil water',
+        'description': 'Heat water just below boiling point (90-95°C).',
+        'timer': false
+      },
+      {
+        'text': 'Grind your coffee',
+        'description': 'We recommend using Fine grind for Moka Pot, similar to espresso but slightly coarser.',
+        'timer': false
+      },
+      {
+        'text': 'Fill bottom chamber',
+        'description': 'Fill the bottom chamber with hot water up to the valve level.',
+        'timer': false
+      },
+      {
+        'text': 'Insert filter basket',
+        'description': 'Insert the filter basket and fill with coffee grounds. Don\'t tamp or overfill.',
+        'timer': false
+      },
+      {
+        'text': 'Assemble pot',
+        'description': 'Screw on the top chamber tightly. Use a towel if the bottom is hot.',
+        'timer': false
+      },
+      {
+        'text': 'Place on heat source',
+        'description': 'Place on medium-low heat with the lid open to observe.',
+        'timer': false
+      },
+      {
+        'text': 'Watch for brewing',
+        'description': 'Coffee will begin to flow into the top chamber. This should take 4-5 minutes.',
+        'timer': true,
+        'duration': 270
+      },
+      {
+        'text': 'Remove from heat',
+        'description': 'Remove from heat when you hear a gurgling sound or see the stream turning lighter in color.',
+        'timer': false
+      },
+      {
+        'text': 'Serve immediately',
+        'description': 'Pour immediately and enjoy your rich, intense coffee!',
+        'timer': false
+      },
+    ],
+    'Cold Brew': [
+      {
+        'text': 'Grind your coffee',
+        'description': 'We recommend using Coarse grind for Cold Brew to prevent over-extraction.',
+        'timer': false
+      },
+      {
+        'text': 'Measure coffee and water',
+        'description': 'Use a 1:5 coffee-to-water ratio for concentrate (1:8 for ready-to-drink).',
+        'timer': false
+      },
+      {
+        'text': 'Combine in container',
+        'description': 'Add coffee grounds to a large jar or cold brew maker, then add cold filtered water.',
+        'timer': false
+      },
+      {
+        'text': 'Stir gently',
+        'description': 'Stir to ensure all grounds are saturated with water.',
+        'timer': false
+      },
+      {
+        'text': 'Cover and refrigerate',
+        'description': 'Cover the container and place in refrigerator.',
+        'timer': false
+      },
+      {
+        'text': 'Steep for 12-24 hours',
+        'description': 'Let steep for 12-24 hours. Longer steeping creates stronger coffee.',
+        'timer': true,
+        'duration': 43200
+      },
+      {
+        'text': 'Filter the coffee',
+        'description': 'Strain through a fine mesh sieve lined with cheesecloth or coffee filter.',
+        'timer': false
+      },
+      {
+        'text': 'Store and serve',
+        'description': 'Store in refrigerator for up to 2 weeks. Serve over ice, diluted with water or milk as desired.',
+        'timer': false
+      },
+    ],
   };
 
   @override
   void initState() {
     super.initState();
     _loadBeanLibrary();
+    
+    // Initialize with values from "Brew Again" if provided
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialBrewMethod != null) {
+        // Find the brewing method in the list
+        for (var method in brewingMethods) {
+          if (method['name'] == widget.initialBrewMethod) {
+            _showBrewingSetupDialog(widget.initialBrewMethod!);
+            break;
+          }
+        }
+        
+        // Set other initial values if provided
+        setState(() {
+          if (widget.initialBeanType != null) {
+            selectedBean = widget.initialBeanType!;
+          }
+          
+          if (widget.initialGrindSize != null) {
+            recommendedGrindSize = widget.initialGrindSize!;
+          }
+          
+          if (widget.initialWaterAmount != null) {
+            waterAmount = widget.initialWaterAmount!;
+          }
+          
+          if (widget.initialCoffeeAmount != null) {
+            coffeeAmount = widget.initialCoffeeAmount!;
+          }
+        });
+      }
+    });
   }
 
   Future<void> _loadBeanLibrary() async {
@@ -333,6 +492,10 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   }
 
   Widget _buildBrewingMethodsList() {
+    List<String> difficulties = ['All', 'Easy', 'Medium', 'Hard'];
+    List<Map<String, dynamic>> filteredMethods = difficultyFilter == 'All'
+        ? brewingMethods
+        : brewingMethods.where((m) => m['difficulty'] == difficultyFilter).toList();
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -346,18 +509,55 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
               color: brightOrange,
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: darkBrown.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: brightOrange.withOpacity(0.3), width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Filter: ", 
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  )
+                ),
+                SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: difficultyFilter,
+                  dropdownColor: darkBrown,
+                  icon: Icon(Icons.arrow_drop_down, color: brightOrange),
+                  underline: Container(height: 0), // Remove the underline
+                  style: TextStyle(color: brightOrange, fontWeight: FontWeight.bold),
+                  items: difficulties
+                      .map((d) => DropdownMenuItem(
+                            value: d,
+                            child: Text(d),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setState(() => difficultyFilter = value);
+                  },
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10),
           Expanded(
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.75,
+                childAspectRatio: 1.0, // Square cards
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
-              itemCount: brewingMethods.length,
+              itemCount: filteredMethods.length,
               itemBuilder: (context, index) {
-                return _buildBrewingMethodCard(brewingMethods[index]);
+                return _buildBrewingMethodCard(filteredMethods[index]);
               },
             ),
           ),
@@ -367,11 +567,28 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   }
 
   Widget _buildBrewingMethodCard(Map<String, dynamic> method) {
-    return GestureDetector(
+    // Get the appropriate icon based on method name
+    IconData icon = Icons.coffee; // Default icon
+    
+    // Map method names to their corresponding Material Icons
+    if (method['name'] == 'Pour Over') {
+      icon = Icons.filter_alt;
+    } else if (method['name'] == 'Espresso') {
+      icon = Icons.local_cafe;
+    } else if (method['name'] == 'Moka Pot') {
+      icon = Icons.coffee_maker;
+    } else if (method['name'] == 'Cold Brew') {
+      icon = Icons.ac_unit;
+    } else if (method['name'] == 'French Press') {
+      icon = Icons.plumbing;
+    } else if (method['name'] == 'AeroPress') {
+      icon = Icons.compress;
+    }
+    
+    // Card tap animation
+    return AnimatedScaleOnTap(
       onTap: () {
-        // Show brewing setup dialog
         _showBrewingSetupDialog(method['name']);
-        // Set the recommended grind size for this method
         setState(() {
           recommendedGrindSize = method['recommendedGrind'];
         });
@@ -380,62 +597,66 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              orangeBrown.withOpacity(0.9),
-              orangeBrown.withOpacity(0.6),
+              orangeBrown.withOpacity(0.35),
+              orangeBrown.withOpacity(0.15),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: brightOrange.withOpacity(0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 4,
-              offset: Offset(2, 2),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: Offset(0, 3),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                method['icon'],
-                width: 60,
-                height: 60,
-                colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
-              ),
-              SizedBox(height: 16),
-              Text(
-                method['name'],
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 8),
-              Text(
-                method['description'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.8),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildMethodStat(Icons.timer, method['time']),
-                  _buildMethodStat(Icons.trending_up, method['difficulty']),
-                ],
-              ),
-            ],
+        child: AspectRatio(
+          aspectRatio: 1.0, // Make cards square
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Material Icon
+                Expanded(flex: 2, child: Center(
+                  child: Icon(
+                    icon,
+                    size: 48,
+                    color: brightOrange,
+                  ),
+                )),
+                // Method Name
+                Expanded(flex: 2, child: Center(
+                  child: Text(
+                    method['name'],
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                          color: Colors.black.withOpacity(0.5),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )),
+                // Stats
+                Expanded(flex: 1, child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildMethodStat(Icons.timer, method['time']),
+                    _buildMethodStat(Icons.trending_up, method['difficulty']),
+                  ],
+                )),
+              ],
+            ),
           ),
         ),
       ),
@@ -453,10 +674,15 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   }
 
   void _showBrewingSetupDialog(String methodName) {
-    // Set the recommended grind size for the selected method
+    // Get method details
+    String methodDescription = '';
+    String methodCharacteristics = '';
+    
     for (var method in brewingMethods) {
       if (method['name'] == methodName) {
         recommendedGrindSize = method['recommendedGrind'];
+        methodDescription = method['description'];
+        methodCharacteristics = method['flavorNotes'];
         break;
       }
     }
@@ -511,6 +737,39 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                             decoration: BoxDecoration(
                               color: brightOrange,
                               borderRadius: BorderRadius.circular(1.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Method description
+                      Text(
+                        methodDescription,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          height: 1.3,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      
+                      // Method characteristics
+                      Row(
+                        children: [
+                          Text(
+                            "Characteristics: ",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: brightOrange,
+                            ),
+                          ),
+                          Text(
+                            methodCharacteristics,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
                           ),
                         ],

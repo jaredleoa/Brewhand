@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'pages/my_brews_page.dart';
 import 'pages/brew_master_page.dart' as master;
 import 'pages/auth/login_page.dart';
@@ -115,7 +114,7 @@ class _BrewHandAppState extends State<BrewHandApp> {
     } else if (_needsProfileSetup) {
       return const ProfileSetupPage();
     } else {
-      return MyBrewsPage();
+      return HomePage();
     }
   }
 }
@@ -230,19 +229,23 @@ class HomePage extends StatelessWidget {
         },
         items: [
           BottomNavigationBarItem(
-            icon: SvgPicture.asset("assets/my_brews.svg", width: 30),
+            icon: Icon(Icons.local_cafe, color: Colors.orange[300]),
+            activeIcon: Icon(Icons.local_cafe, color: orangeBrown),
             label: "Brews",
           ),
           BottomNavigationBarItem(
-            icon: SvgPicture.asset("assets/brew_master.svg", width: 30),
+            icon: Icon(Icons.coffee_maker, color: Colors.orange[300]),
+            activeIcon: Icon(Icons.coffee_maker, color: orangeBrown),
             label: "Master",
           ),
           BottomNavigationBarItem(
-            icon: SvgPicture.asset("assets/brew_bot.svg", width: 30),
+            icon: Icon(Icons.smart_toy, color: Colors.orange[300]),
+            activeIcon: Icon(Icons.smart_toy, color: orangeBrown),
             label: "Bot",
           ),
           BottomNavigationBarItem(
-            icon: SvgPicture.asset("assets/brew_social.svg", width: 30),
+            icon: Icon(Icons.people, color: Colors.orange[300]),
+            activeIcon: Icon(Icons.people, color: orangeBrown),
             label: "Social",
           ),
         ],
@@ -291,6 +294,22 @@ class _MenuItemState extends State<_MenuItem> {
 
     Navigator.pushNamed(context, widget.route);
   }
+  
+  // Convert SVG paths to Material Icons
+  IconData _getIconForPath(String path) {
+    switch (path) {
+      case 'assets/my_brews.svg':
+        return Icons.local_cafe;
+      case 'assets/brew_master.svg':
+        return Icons.coffee_maker;
+      case 'assets/brew_bot.svg':
+        return Icons.smart_toy;
+      case 'assets/brew_social.svg':
+        return Icons.people;
+      default:
+        return Icons.coffee;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -308,10 +327,9 @@ class _MenuItemState extends State<_MenuItem> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SvgPicture.asset(
-                widget.imagePath,
-                width: 90,
-                height: 90,
+              Icon(
+                _getIconForPath(widget.imagePath),
+                size: 90,
                 color: widget.iconColor,
               ),
               SizedBox(height: 15),

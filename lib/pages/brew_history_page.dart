@@ -17,7 +17,13 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
   final Color brightOrange = Color(0xFFFF9800);
 
   List<BrewHistory> brewHistory = [];
+  List<BrewHistory> filteredBrewHistory = [];
   bool isLoading = true;
+  
+  // Filter state variables
+  String currentFilter = "All Brews";
+  bool isHighestRatedFilter = false;
+  bool isLast30DaysFilter = false;
 
   @override
   void initState() {
@@ -32,6 +38,8 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
 
       setState(() {
         brewHistory = history;
+        // Initialize filtered list with all brews
+        filteredBrewHistory = List.from(history);
         isLoading = false;
       });
     } catch (e) {
@@ -40,6 +48,38 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
         isLoading = false;
       });
     }
+  }
+  
+  // Apply filters based on current filter settings
+  void _applyFilters() {
+    setState(() {
+      // Start with all brews
+      filteredBrewHistory = List.from(brewHistory);
+      
+      // Apply method filter if not "All Brews"
+      if (currentFilter != "All Brews") {
+        filteredBrewHistory = filteredBrewHistory
+            .where((brew) => brew.brewMethod == currentFilter)
+            .toList();
+      }
+      
+      // Apply highest rated filter
+      if (isHighestRatedFilter) {
+        filteredBrewHistory.sort((a, b) => b.rating.compareTo(a.rating));
+        // Keep only top rated brews (rating 4 or higher)
+        filteredBrewHistory = filteredBrewHistory
+            .where((brew) => brew.rating >= 4)
+            .toList();
+      }
+      
+      // Apply last 30 days filter
+      if (isLast30DaysFilter) {
+        final thirtyDaysAgo = DateTime.now().subtract(Duration(days: 30));
+        filteredBrewHistory = filteredBrewHistory
+            .where((brew) => brew.brewDate.isAfter(thirtyDaysAgo))
+            .toList();
+      }
+    });
   }
 
   @override
@@ -136,14 +176,49 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
   }
 
   Widget _buildBrewHistoryList() {
-    // Sort brews by date (newest first)
-    brewHistory.sort((a, b) => b.brewDate.compareTo(a.brewDate));
+    // Apply filters if not already applied
+    if (filteredBrewHistory.isEmpty && brewHistory.isNotEmpty) {
+      _applyFilters();
+    }
+    
+    // Check if filtered list is empty after applying filters
+    if (filteredBrewHistory.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.filter_alt_off, size: 60, color: orangeBrown.withOpacity(0.6)),
+            SizedBox(height: 24),
+            Text(
+              "No matches found",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: brightOrange,
+              ),
+            ),
+            SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                "Try adjusting your filters",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: EdgeInsets.all(16),
-      itemCount: brewHistory.length,
+      itemCount: filteredBrewHistory.length,
       itemBuilder: (context, index) {
-        final brew = brewHistory[index];
+        final brew = filteredBrewHistory[index];
         return _buildBrewCard(brew);
       },
     );
@@ -310,7 +385,19 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
                   icon: Icon(Icons.repeat, size: 18),
                   label: Text("Brew Again"),
                   onPressed: () {
-                    // Logic to start brewing with these settings
+                    // Navigate to Brew Master page with these settings
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BrewMasterPage(
+                          initialBrewMethod: brew.brewMethod,
+                          initialBeanType: brew.beanType,
+                          initialGrindSize: brew.grindSize,
+                          initialWaterAmount: brew.waterAmount,
+                          initialCoffeeAmount: brew.coffeeAmount,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 SizedBox(width: 8),
@@ -385,85 +472,152 @@ class _BrewHistoryPageState extends State<BrewHistoryPage> {
   }
 
   void _showFilterDialog() {
+    // Create local variables to track filter state during dialog
+    String tempFilter = currentFilter;
+    bool tempHighestRated = isHighestRatedFilter;
+    bool tempLast30Days = isLast30DaysFilter;
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: darkBrown,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Filter Brews",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: brightOrange,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: darkBrown,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
-              SizedBox(height: 20),
-
-              // Filter options
-              _buildFilterOption("All Brews", true),
-              _buildFilterOption("French Press", false),
-              _buildFilterOption("Pour Over", false),
-              _buildFilterOption("AeroPress", false),
-              _buildFilterOption("Espresso", false),
-              Divider(color: orangeBrown.withOpacity(0.3)),
-              _buildFilterOption("Highest Rated", false),
-              _buildFilterOption("Last 30 Days", false),
-
-              SizedBox(height: 16),
-              Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade800,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text("Cancel"),
+                  Text(
+                    "Filter Brews",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: brightOrange,
                     ),
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: brightOrange,
-                        foregroundColor: darkBrown,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  SizedBox(height: 20),
+
+                  // Filter options for brewing methods
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempFilter = "All Brews";
+                      });
+                    },
+                    child: _buildFilterOption("All Brews", tempFilter == "All Brews"),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempFilter = "French Press";
+                      });
+                    },
+                    child: _buildFilterOption("French Press", tempFilter == "French Press"),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempFilter = "Pour Over";
+                      });
+                    },
+                    child: _buildFilterOption("Pour Over", tempFilter == "Pour Over"),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempFilter = "AeroPress";
+                      });
+                    },
+                    child: _buildFilterOption("AeroPress", tempFilter == "AeroPress"),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempFilter = "Espresso";
+                      });
+                    },
+                    child: _buildFilterOption("Espresso", tempFilter == "Espresso"),
+                  ),
+                  
+                  Divider(color: orangeBrown.withOpacity(0.3)),
+                  
+                  // Additional filter options
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempHighestRated = !tempHighestRated;
+                      });
+                    },
+                    child: _buildFilterOption("Highest Rated", tempHighestRated),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      setDialogState(() {
+                        tempLast30Days = !tempLast30Days;
+                      });
+                    },
+                    child: _buildFilterOption("Last 30 Days", tempLast30Days),
+                  ),
+
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade800,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text("Cancel"),
                         ),
                       ),
-                      onPressed: () {
-                        // Apply filters and close dialog
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        "Apply Filters",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: brightOrange,
+                            foregroundColor: darkBrown,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Apply filters and close dialog
+                            setState(() {
+                              currentFilter = tempFilter;
+                              isHighestRatedFilter = tempHighestRated;
+                              isLast30DaysFilter = tempLast30Days;
+                            });
+                            _applyFilters(); // Apply the new filters
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            "Apply Filters",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

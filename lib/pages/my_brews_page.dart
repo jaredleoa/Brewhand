@@ -1082,20 +1082,35 @@ class _MyBrewsPageState extends State<MyBrewsPage> with WidgetsBindingObserver {
   }
 
   Widget _buildStatBox(String value, String label, String iconPath) {
+    // Convert SVG path to Material Icon
+    IconData icon = Icons.coffee;
+    
+    // Map icon paths to Material Icons
+    if (iconPath == 'assets/coffee_cup.svg') {
+      icon = Icons.local_cafe;
+    } else if (iconPath == 'assets/brew_master.svg') {
+      icon = Icons.auto_awesome;
+    } else if (iconPath == 'assets/Star.svg') {
+      icon = Icons.star;
+    } else if (iconPath == 'assets/my_brews.svg') {
+      icon = Icons.coffee_maker;
+    }
+    
     return Container(
       padding: EdgeInsets.all(15),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         gradient: LinearGradient(
-          colors: [orangeBrown.withOpacity(0.6), orangeBrown.withOpacity(0.3)],
+          colors: [orangeBrown.withOpacity(0.35), orangeBrown.withOpacity(0.15)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        border: Border.all(color: brightOrange.withOpacity(0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -1107,11 +1122,10 @@ class _MyBrewsPageState extends State<MyBrewsPage> with WidgetsBindingObserver {
             width: 60,
             height: 60,
             alignment: Alignment.center,
-            child: SvgPicture.asset(
-              iconPath,
-              width: 42,  // Larger icon size
-              height: 42, // Larger icon size
-              colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
+            child: Icon(
+              icon,
+              size: 48,
+              color: brightOrange,
             ),
           ),
           SizedBox(height: 12),
