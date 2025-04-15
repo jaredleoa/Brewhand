@@ -224,6 +224,7 @@ class SupabaseService {
           uniqueBeans: 0,
           beansUsed: [],
           methodsUsed: [],
+          lastBrewDate: null,
         );
         
         await _saveUserStats(initialStats);
@@ -231,14 +232,46 @@ class SupabaseService {
       }
       
       // Convert from snake_case DB columns to camelCase properties
-      return UserStats.fromJson({
+      // Handle arrays properly by ensuring they're converted to List<String>
+      List<String> beansUsed = [];
+      List<String> methodsUsed = [];
+      
+      if (response['beans_used'] != null) {
+        if (response['beans_used'] is List) {
+          beansUsed = List<String>.from(response['beans_used']);
+        } else {
+          debugPrint('Warning: beans_used is not a list: ${response['beans_used']}');
+        }
+      }
+      
+      if (response['methods_used'] != null) {
+        if (response['methods_used'] is List) {
+          methodsUsed = List<String>.from(response['methods_used']);
+        } else {
+          debugPrint('Warning: methods_used is not a list: ${response['methods_used']}');
+        }
+      }
+      
+      final userStats = UserStats.fromJson({
         'coffeeStreak': response['coffee_streak'],
         'coffeesMade': response['coffees_made'],
         'uniqueDrinks': response['unique_drinks'],
         'uniqueBeans': response['unique_beans'],
-        'beansUsed': response['beans_used'] ?? [],
-        'methodsUsed': response['methods_used'] ?? [],
+        'beansUsed': beansUsed,
+        'methodsUsed': methodsUsed,
+        'lastBrewDate': response['last_brew_date'],
       });
+      
+      // Check if streak should be reset due to missed days
+      userStats.checkStreakReset();
+      
+      // If streak was reset, save the updated stats
+      if (userStats.coffeeStreak == 0 && response['coffee_streak'] > 0) {
+        debugPrint('Coffee streak reset detected. Saving updated stats.');
+        await _saveUserStats(userStats);
+      }
+      
+      return userStats;
     } catch (e) {
       debugPrint('Error getting user stats: $e');
       return null;
@@ -246,11 +279,137 @@ class SupabaseService {
   }
   
   Future<void> _updateUserStats(BrewHistory brew) async {
-    final stats = await getUserStats();
-    if (stats == null) return;
-    
-    stats.updateWithNewBrew(brew);
-    await _saveUserStats(stats);
+    try {
+      if (!isSignedIn) {
+        debugPrint('Cannot update user stats: User not signed in');
+        return;
+      }
+
+      debugPrint('Updating user stats with new brew: ${brew.brewMethod}, ${brew.beanType}');
+      
+      // Date tracking will be added in the future when the last_brew_date column exists
+      
+      // First get current user stats to determine what needs to be updated
+      final response = await client
+          .from(SupabaseTables.userStats)
+          .select()
+          .eq('user_id', currentUser!.id)
+          .maybeSingle();
+      
+      if (response == null) {
+        // No stats yet, create initial stats
+        debugPrint('No existing stats found, creating new stats record');
+        
+        await client.from(SupabaseTables.userStats).insert({
+          'user_id': currentUser!.id,
+          'coffee_streak': 1, // First brew starts streak at 1
+          'coffees_made': 1,
+          'unique_drinks': 1,
+          'unique_beans': 1,
+          'beans_used': [brew.beanType],
+          'methods_used': [brew.brewMethod],
+          // Don't include last_brew_date as it's missing from the schema
+        });
+        
+        debugPrint('Created initial user stats');
+        return;
+      }
+      
+      // Get existing values
+      int coffeesMade = response['coffees_made'] ?? 0;
+      int coffeeStreak = response['coffee_streak'] ?? 0;
+      int uniqueDrinks = response['unique_drinks'] ?? 0;
+      int uniqueBeans = response['unique_beans'] ?? 0;
+      List<String> beansUsed = response['beans_used'] != null ? 
+        List<String>.from(response['beans_used']) : [];
+      List<String> methodsUsed = response['methods_used'] != null ? 
+        List<String>.from(response['methods_used']) : [];
+      
+      // Update coffees made (always increments)
+      coffeesMade++;
+      
+      // Check if the user already has a brew for today to prevent multiple streak increases in one day
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(Duration(days: 1));
+      
+      // Query brew history to check if there are any brews from today (excluding the current one)
+      final todayBrews = await client
+          .from(SupabaseTables.brewHistory)
+          .select()
+          .eq('user_id', currentUser!.id)
+          .gte('brew_date', todayStart.toIso8601String())
+          .lt('brew_date', todayEnd.toIso8601String())
+          .neq('id', brew.id)  // Exclude current brew
+          .count();
+      
+      debugPrint('Found ${todayBrews.count} other brews from today');
+      
+      // Only increment streak if this is the first brew of the day
+      if (todayBrews.count == 0) {
+        coffeeStreak++;
+        debugPrint('First brew of the day! Incrementing streak to: $coffeeStreak');
+      } else {
+        debugPrint('Already brewed today, keeping streak at: $coffeeStreak');
+      }
+      
+      // Check for new bean
+      bool isNewBean = !beansUsed.contains(brew.beanType);
+      if (isNewBean) {
+        beansUsed.add(brew.beanType);
+        uniqueBeans = beansUsed.length;
+        debugPrint('Added new bean: ${brew.beanType}, total unique beans: $uniqueBeans');
+      }
+      
+      // Check for new method
+      bool isNewMethod = !methodsUsed.contains(brew.brewMethod);
+      if (isNewMethod) {
+        methodsUsed.add(brew.brewMethod);
+        uniqueDrinks = methodsUsed.length;
+        debugPrint('Added new method: ${brew.brewMethod}, total unique drinks: $uniqueDrinks');
+      }
+      
+      // Log the values we'll be updating with
+      debugPrint('Updating with values:');
+      debugPrint('Coffees made: $coffeesMade');
+      debugPrint('Coffee streak: $coffeeStreak');
+      debugPrint('Unique drinks: $uniqueDrinks');
+      debugPrint('Unique beans: $uniqueBeans');
+      debugPrint('Beans used: $beansUsed');
+      debugPrint('Methods used: $methodsUsed');
+      
+      // Update the stats in Supabase
+      await client
+        .from(SupabaseTables.userStats)
+        .update({
+          'coffees_made': coffeesMade,
+          'coffee_streak': coffeeStreak,
+          'unique_drinks': uniqueDrinks,
+          'unique_beans': uniqueBeans,
+          'beans_used': beansUsed,
+          'methods_used': methodsUsed,
+          // Don't include last_brew_date as it's missing from the schema
+        })
+        .eq('user_id', currentUser!.id);
+      
+      // Verify update was successful
+      final verifyResponse = await client
+          .from(SupabaseTables.userStats)
+          .select()
+          .eq('user_id', currentUser!.id)
+          .maybeSingle();
+          
+      if (verifyResponse != null) {
+        debugPrint('Verification - updated stats:');
+        debugPrint('Coffees made: ${verifyResponse['coffees_made']}');
+        debugPrint('Unique drinks: ${verifyResponse['unique_drinks']}');
+        debugPrint('Unique beans: ${verifyResponse['unique_beans']}');
+      }
+      
+      debugPrint('User stats successfully updated');
+    } catch (e) {
+      debugPrint('Error updating user stats: $e');
+    }
   }
   
   Future<void> _saveUserStats(UserStats stats) async {
@@ -260,6 +419,10 @@ class SupabaseService {
     }
     
     try {
+      // Make sure the arrays are properly formatted for Postgres
+      List<String> cleanBeansUsed = List<String>.from(stats.beansUsed);
+      List<String> cleanMethodsUsed = List<String>.from(stats.methodsUsed);
+      
       // Convert from camelCase properties to snake_case DB columns
       final Map<String, dynamic> dbData = {
         'user_id': currentUser!.id,
@@ -267,13 +430,15 @@ class SupabaseService {
         'coffees_made': stats.coffeesMade,
         'unique_drinks': stats.uniqueDrinks,
         'unique_beans': stats.uniqueBeans,
-        // Important fix: These need to be ARRAYS in Postgres format
-        'beans_used': stats.beansUsed.isEmpty ? [] : stats.beansUsed,
-        'methods_used': stats.methodsUsed.isEmpty ? [] : stats.methodsUsed,
+        'beans_used': cleanBeansUsed,
+        'methods_used': cleanMethodsUsed,
+        'last_brew_date': stats.lastBrewDate,
       };
       
       debugPrint('Saving user stats with user_id: ${currentUser!.id}');
       debugPrint('Database data: $dbData');
+      debugPrint('Beans used (${cleanBeansUsed.length}): $cleanBeansUsed');
+      debugPrint('Methods used (${cleanMethodsUsed.length}): $cleanMethodsUsed');
       
       // Check if the stats already exist for this user
       final existingStats = await client
@@ -284,17 +449,19 @@ class SupabaseService {
       
       if (existingStats != null) {
         // Stats exist, update them
-        await client
+        final result = await client
           .from(SupabaseTables.userStats)
           .update(dbData)
           .eq('user_id', currentUser!.id);
-        debugPrint('Updated existing user stats');
+          
+        debugPrint('Updated existing user stats: $result');
       } else {
         // Stats don't exist, insert them
-        await client
+        final result = await client
           .from(SupabaseTables.userStats)
           .insert(dbData);
-        debugPrint('Inserted new user stats');
+          
+        debugPrint('Inserted new user stats: $result');
       }
       
       debugPrint('User stats saved successfully');

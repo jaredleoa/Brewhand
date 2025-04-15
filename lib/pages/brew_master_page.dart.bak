@@ -87,191 +87,181 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   bool brewCompleted = false;
 
   // Step lists for different brewing methods
+  // Updated brewing steps with detailed information including timers
   Map<String, List<Map<String, dynamic>>> brewingSteps = {
     'French Press': [
       {
         'text': 'Boil water to 93°C',
-        'description':
-            'Heat your water to the ideal temperature for French Press brewing.',
-        'timer': false
+        'description': 'Heat your water to just below boiling for optimal extraction.',
+        'timer': false,
       },
       {
-        'text': 'Grind your coffee',
-        'description': 'We recommend using Coarse grind for French Press.',
-        'timer': false
+        'text': 'Prepare your coffee grounds',
+        'description': 'Use a coarse grind, similar to sea salt, for French Press brewing.',
+        'timer': false,
       },
       {
-        'text': 'Add coffee grounds',
-        'description': 'Add the coffee grounds to the French press.',
-        'timer': false
+        'text': 'Add coffee grounds to the French press',
+        'description': 'Add coffee to the press based on your ratio.',
+        'timer': false,
       },
       {
-        'text': 'Pour hot water',
-        'description':
-            'Pour hot water over the grounds, making sure all grounds are saturated.',
-        'timer': false
+        'text': 'Pour hot water over the grounds',
+        'description': 'Add hot water, ensuring all grounds are saturated.',
+        'timer': false,
       },
       {
         'text': 'Stir gently',
-        'description':
-            'Stir gently to ensure all grounds are evenly saturated.',
-        'timer': false
+        'description': 'Use a wooden spoon to stir and ensure all grounds are wet.',
+        'timer': false,
       },
       {
-        'text': 'Let steep',
-        'description':
-            'Place the plunger on top but don\'t press down. Let steep for 4 minutes.',
+        'text': 'Let steep for 4 minutes',
+        'description': 'Place the plunger on top but don\'t press down yet. Allow coffee to steep.',
         'timer': true,
-        'duration': 240
+        'duration': 240,
       },
       {
-        'text': 'Press plunger',
-        'description': 'Slowly press the plunger down with steady pressure.',
-        'timer': false
+        'text': 'Press the plunger down slowly',
+        'description': 'Apply steady, gentle pressure to push the plunger to the bottom.',
+        'timer': false,
       },
       {
-        'text': 'Serve and enjoy',
-        'description':
-            'Pour into your cup and enjoy your freshly brewed coffee!',
-        'timer': false
+        'text': 'Pour and enjoy your coffee!',
+        'description': 'Pour into your favorite mug and savor the rich, full-bodied flavor.',
+        'timer': false,
       },
     ],
     'Pour Over': [
       {
         'text': 'Boil water to 93°C',
-        'description':
-            'Heat your water to the ideal temperature for Pour Over brewing.',
-        'timer': false
+        'description': 'Heat your water to just below boiling for optimal extraction.',
+        'timer': false,
       },
       {
-        'text': 'Grind your coffee',
-        'description': 'We recommend using Medium-Fine grind for Pour Over.',
-        'timer': false
+        'text': 'Prepare your coffee grounds',
+        'description': 'Use a medium-fine grind, similar to table salt, for Pour Over brewing.',
+        'timer': false,
       },
       {
-        'text': 'Prepare filter',
-        'description':
-            'Place filter in dripper and rinse with hot water to remove paper taste and preheat.',
-        'timer': false
+        'text': 'Rinse filter and set up dripper',
+        'description': 'Place filter in dripper and rinse with hot water to remove paper taste.',
+        'timer': false,
       },
       {
         'text': 'Add coffee grounds',
-        'description':
-            'Add the coffee grounds to the filter, creating an even bed.',
-        'timer': false
+        'description': 'Add coffee to the filter, creating a flat bed.',
+        'timer': false,
       },
       {
-        'text': 'Bloom the coffee',
-        'description':
-            'Pour a small amount of water (about twice the weight of coffee) to "bloom" the coffee.',
+        'text': 'Bloom the coffee for 30 seconds',
+        'description': 'Pour 50ml of water in a spiral motion and wait for gases to release.',
         'timer': true,
-        'duration': 30
+        'duration': 30,
       },
       {
-        'text': 'Continue pouring',
-        'description':
-            'Slowly pour the remaining water in a circular motion, maintaining a consistent flow.',
-        'timer': false
+        'text': 'Continue pouring in stages',
+        'description': 'Slowly pour the remaining water in circular motions.',
+        'timer': false,
       },
       {
-        'text': 'Wait for dripping',
-        'description': 'Allow all water to drip through the filter completely.',
-        'timer': false
+        'text': 'Allow water to drip through',
+        'description': 'Wait for all water to pass through the filter, about 2 minutes total.',
+        'timer': true,
+        'duration': 120,
       },
       {
-        'text': 'Serve and enjoy',
-        'description': 'Remove filter and enjoy your freshly brewed coffee!',
-        'timer': false
+        'text': 'Enjoy your coffee!',
+        'description': 'Remove filter and enjoy the clean, bright flavors of your pour over.',
+        'timer': false,
       },
     ],
     'AeroPress': [
       {
         'text': 'Boil water to 85°C',
-        'description':
-            'Heat your water to the ideal temperature for AeroPress brewing.',
-        'timer': false
+        'description': 'Heat your water to 85°C (185°F) for optimal AeroPress brewing.',
+        'timer': false,
       },
       {
-        'text': 'Grind your coffee',
-        'description': 'We recommend using Fine grind for AeroPress.',
-        'timer': false
+        'text': 'Prepare your coffee grounds',
+        'description': 'Use a fine grind, similar to sugar, for AeroPress brewing.',
+        'timer': false,
       },
       {
-        'text': 'Prepare filter',
-        'description':
-            'Place filter in AeroPress cap and rinse with hot water.',
-        'timer': false
+        'text': 'Set up the AeroPress',
+        'description': 'Place filter in cap, rinse with hot water, and attach to chamber.',
+        'timer': false,
       },
       {
-        'text': 'Assemble AeroPress',
-        'description': 'Attach cap to AeroPress chamber and place on cup.',
-        'timer': false
+        'text': 'Add coffee and water',
+        'description': 'Add coffee to the chamber, then pour hot water.',
+        'timer': false,
       },
       {
-        'text': 'Add coffee grounds',
-        'description': 'Add the coffee grounds to the chamber.',
-        'timer': false
-      },
-      {
-        'text': 'Add water and stir',
-        'description': 'Pour hot water and stir for 10 seconds.',
+        'text': 'Stir for 10 seconds',
+        'description': 'Use the stirring paddle to mix the coffee and water thoroughly.',
         'timer': true,
-        'duration': 10
+        'duration': 10,
       },
       {
-        'text': 'Press',
-        'description':
-            'Insert plunger and press down gently with steady pressure.',
-        'timer': false
+        'text': 'Insert plunger and wait',
+        'description': 'Place the plunger on top to create a vacuum and prevent dripping.',
+        'timer': true,
+        'duration': 60,
       },
       {
-        'text': 'Serve and enjoy',
-        'description': 'Enjoy your freshly brewed coffee!',
-        'timer': false
+        'text': 'Press gently for 20-30 seconds',
+        'description': 'Apply steady pressure to push the plunger down completely.',
+        'timer': true,
+        'duration': 20,
+      },
+      {
+        'text': 'Enjoy your coffee!',
+        'description': 'Dilute with water if desired, and enjoy your smooth AeroPress coffee.',
+        'timer': false,
       },
     ],
     'Espresso': [
       {
-        'text': 'Preheat machine',
-        'description': 'Preheat your espresso machine thoroughly.',
-        'timer': false
+        'text': 'Heat your espresso machine',
+        'description': 'Turn on your machine and allow it to fully heat up (about 15-20 minutes).',
+        'timer': false,
       },
       {
-        'text': 'Grind your coffee',
-        'description': 'We recommend using Extra Fine grind for Espresso.',
-        'timer': false
+        'text': 'Prepare your coffee grounds',
+        'description': 'Use an extra-fine grind, similar to powdered sugar, for espresso.',
+        'timer': false,
       },
       {
-        'text': 'Dose portafilter',
-        'description': 'Add coffee grounds to the portafilter evenly.',
-        'timer': false
+        'text': 'Dose and distribute',
+        'description': 'Add coffee to the portafilter and distribute evenly.',
+        'timer': false,
       },
       {
-        'text': 'Tamp grounds',
-        'description': 'Tamp down the grounds with even pressure.',
-        'timer': false
+        'text': 'Tamp the coffee grounds',
+        'description': 'Apply about 30 pounds of pressure, ensuring a level tamp.',
+        'timer': false,
       },
       {
-        'text': 'Lock portafilter',
-        'description': 'Lock the portafilter into the machine securely.',
-        'timer': false
+        'text': 'Insert portafilter and prepare',
+        'description': 'Lock the portafilter into the group head and place cup underneath.',
+        'timer': false,
       },
       {
-        'text': 'Extract espresso',
-        'description':
-            'Start the extraction - aim for 25-30 seconds for optimal flavor.',
+        'text': 'Extract for 25-30 seconds',
+        'description': 'Start extraction and aim for 30ml of espresso in 25-30 seconds.',
         'timer': true,
-        'duration': 28
+        'duration': 28,
       },
       {
-        'text': 'Watch crema',
-        'description': 'Watch for the golden crema forming on top.',
-        'timer': false
+        'text': 'Observe the extraction',
+        'description': 'Watch for proper flow - it should look like warm honey.',
+        'timer': false,
       },
       {
-        'text': 'Serve and enjoy',
-        'description': 'Enjoy your freshly brewed espresso!',
-        'timer': false
+        'text': 'Enjoy your espresso!',
+        'description': 'Savor immediately while the crema is fresh.',
+        'timer': false,
       },
     ],
   };
@@ -318,16 +308,11 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
         elevation: 0,
         iconTheme: IconThemeData(color: brightOrange),
       ),
-      body: SafeArea(
-        child: isLoading
-            ? Center(child: CircularProgressIndicator(color: brightOrange))
-            : showGuide
-                ? SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: _buildBrewingGuide(),
-                  )
-                : _buildBrewingMethodsList(),
-      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator(color: brightOrange))
+          : showGuide
+              ? _buildBrewingGuide()
+              : _buildBrewingMethodsList(),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -803,8 +788,10 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                         ),
                       ),
 
+                      // Add bottom padding to ensure content isn't cut off
+                      SizedBox(height: 60),
+
                       // Action buttons at the bottom
-                      SizedBox(height: 30),
                       Row(
                         children: [
                           Expanded(
@@ -1195,7 +1182,8 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: EdgeInsets.all(12),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
@@ -1423,9 +1411,11 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
 
     final steps = brewingSteps[selectedMethod] ?? [];
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header with method name and back button
@@ -1511,31 +1501,15 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                     ),
                     SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            steps.isNotEmpty
-                                ? "Step ${currentStep + 1}"
-                                : "No steps available",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          if (steps.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Text(
-                                steps[currentStep]['text'].toString(),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white.withOpacity(0.9),
-                                ),
-                              ),
-                            ),
-                        ],
+                      child: Text(
+                        steps.isNotEmpty
+                            ? steps[currentStep]['text'].toString()
+                            : "No steps available",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -1550,7 +1524,6 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                     color: Colors.white,
                   ),
                 ),
-
                 // Add timer component for steps that require timing
                 if (steps.isNotEmpty && steps[currentStep]['timer'] == true)
                   Padding(
@@ -1563,8 +1536,7 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                       onComplete: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                                Text("Timer completed! Ready for next step."),
+                            content: Text("Timer completed! Ready for next step."),
                             backgroundColor: brightOrange,
                             duration: Duration(seconds: 3),
                           ),
@@ -1634,37 +1606,22 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
               ),
             ),
 
-          // Coffee and water amount reminder
+          // Brew settings reminder at the bottom
           Container(
-            margin: EdgeInsets.only(top: 24),
+            margin: EdgeInsets.only(top: 24, bottom: 16),
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: darkBrown.withOpacity(0.7),
+              color: darkBrown.withOpacity(0.6),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: brightOrange.withOpacity(0.3)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text(
-                  "Brew Settings Reminder:",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: brightOrange,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildReminderItem(
-                        Icons.coffee, "Coffee", "$coffeeAmount g"),
-                    _buildReminderItem(
-                        Icons.water_drop, "Water", "$waterAmount ml"),
-                    _buildReminderItem(
-                        Icons.grain, "Grind", recommendedGrindSize),
-                  ],
+                _buildReminderItem(Icons.coffee, "Coffee", "$coffeeAmount g"),
+                _buildReminderItem(Icons.water_drop, "Water", "$waterAmount ml"),
+                _buildReminderItem(Icons.grain, "Grind", recommendedGrindSize),
+              ],
                 ),
               ],
             ),
@@ -1703,18 +1660,18 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
       data: Theme.of(context).copyWith(
         canvasColor: darkBrown, // Set consistent background color
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: darkBrown,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
+      child: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: darkBrown,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: Offset(0, -2),
+              ),
+            ],
+          child: BottomNavigationBar(
           backgroundColor: darkBrown,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
