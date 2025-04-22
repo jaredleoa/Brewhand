@@ -1,15 +1,33 @@
+/// User Statistics Model
+/// 
+/// Tracks and manages user activity statistics related to coffee brewing.
+/// Includes metrics like streaks, counts, and variety of brewing methods and beans used.
+/// Maps to the 'user_stats' table in the Supabase database.
+
 import 'package:brewhand/models/brew_history.dart';
 import 'package:flutter/foundation.dart';
-
-// User stats class to track coffee statistics
 class UserStats {
+  /// Current consecutive days streak of brewing coffee
   int coffeeStreak;
+  
+  /// Total number of coffee brewing sessions recorded
   int coffeesMade;
+  
+  /// Number of different brewing methods the user has tried
   int uniqueDrinks;
+  
+  /// Number of different coffee bean types the user has used
   int uniqueBeans;
+  
+  /// List of all bean types the user has brewed with
   List<String> beansUsed;
+  
+  /// List of all brewing methods the user has used
   List<String> methodsUsed;
-  String? lastBrewDate; // Store the date of the last brew (YYYY-MM-DD format)
+  
+  /// Date of the last recorded brew in YYYY-MM-DD format
+  /// Used for streak calculations
+  String? lastBrewDate;
 
   UserStats({
     this.coffeeStreak = 0,
@@ -21,7 +39,13 @@ class UserStats {
     this.lastBrewDate,
   });
 
-  // Update stats when a new brew is completed
+  /// Updates user statistics when a new brewing session is completed
+  /// 
+  /// Increments counters, updates lists of beans and methods used,
+  /// and recalculates the user's brewing streak.
+  /// 
+  /// Parameters:
+  /// - [brew]: The BrewHistory object representing the new brewing session
   void updateWithNewBrew(BrewHistory brew) {
     // Increment coffees made
     coffeesMade++;
@@ -42,7 +66,13 @@ class UserStats {
     updateStreak(brew.brewDate);
   }
 
-  // Function to check and update streak
+  /// Updates the user's coffee brewing streak based on the date of a new brew
+  /// 
+  /// Calculates whether the streak should increase, reset, or remain unchanged
+  /// based on the relationship between the brew date and the last recorded brew.
+  /// 
+  /// Parameters:
+  /// - [brewDate]: The date of the new brewing session
   void updateStreak(DateTime brewDate) {
     // Format the current brew date to YYYY-MM-DD format for day comparison
     final String formattedBrewDate = _formatDateToYYYYMMDD(brewDate);
@@ -81,12 +111,26 @@ class UserStats {
     lastBrewDate = formattedBrewDate;
   }
   
-  // Helper method to format date to YYYY-MM-DD
+  /// Formats a DateTime to YYYY-MM-DD string format
+  /// 
+  /// Used for date comparisons when calculating streaks.
+  /// 
+  /// Parameters:
+  /// - [date]: The DateTime to format
+  /// 
+  /// Returns a string in YYYY-MM-DD format
   String _formatDateToYYYYMMDD(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
   
-  // Helper method to parse YYYY-MM-DD string into DateTime
+  /// Parses a YYYY-MM-DD string into a DateTime object
+  /// 
+  /// Used for date comparisons when calculating streaks.
+  /// 
+  /// Parameters:
+  /// - [dateStr]: The string to parse
+  /// 
+  /// Returns a DateTime object
   DateTime _parseYYYYMMDD(String dateStr) {
     final parts = dateStr.split('-');
     return DateTime(
@@ -96,7 +140,14 @@ class UserStats {
     );
   }
 
-  // Factory constructor to create from JSON
+  /// Creates a UserStats instance from a JSON map
+  /// 
+  /// Used to convert database records or API responses into UserStats objects.
+  /// 
+  /// Parameters:
+  /// - [json]: Map containing the user statistics data
+  /// 
+  /// Returns a new UserStats instance populated with the data from the map
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
       coffeeStreak: json['coffeeStreak'] ?? 0,
@@ -109,7 +160,11 @@ class UserStats {
     );
   }
 
-  // Method to convert to JSON
+  /// Converts this UserStats instance to a JSON map
+  /// 
+  /// Used when sending user statistics data to the database or API.
+  /// 
+  /// Returns a Map with the user statistics in the correct format for storage
   Map<String, dynamic> toJson() {
     return {
       'coffeeStreak': coffeeStreak,

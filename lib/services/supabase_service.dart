@@ -1,3 +1,9 @@
+/// Backend Service Layer for BrewHand
+/// 
+/// This service provides a centralized interface for all interactions with the
+/// Supabase backend, including authentication, database operations, and storage.
+/// It follows the Singleton pattern to ensure a single instance throughout the app.
+
 import 'dart:io';
 import 'package:brewhand/models/brew_history.dart';
 import 'package:brewhand/models/user_profile.dart';
@@ -9,16 +15,33 @@ import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'supabase_config.dart';
 
+/// Service for interacting with Supabase backend
+/// 
+/// Implements the Singleton pattern to ensure a single instance is used
+/// throughout the application. Provides methods for authentication, database
+/// operations, and file storage.
 class SupabaseService {
+  /// Singleton instance
   static final SupabaseService _instance = SupabaseService._internal();
   
+  /// Factory constructor that returns the singleton instance
   factory SupabaseService() {
     return _instance;
   }
   
+  /// Private constructor for singleton implementation
   SupabaseService._internal();
   
-  // Initialize Supabase
+  /// Initializes the Supabase client
+  /// 
+  /// Must be called before any other Supabase operations.
+  /// Uses configuration values from supabase_config.dart.
+  /// 
+  /// Example:
+  /// ```dart
+  /// final supabaseService = SupabaseService();
+  /// await supabaseService.initialize();
+  /// ```
   Future<void> initialize() async {
     await Supabase.initialize(
       url: supabaseUrl,
@@ -26,10 +49,25 @@ class SupabaseService {
     );
   }
   
-  // Get Supabase client
+  /// Returns the Supabase client instance
+  /// 
+  /// Provides access to the underlying Supabase client for direct API calls.
+  /// Should only be used when the service doesn't provide a specific method
+  /// for the required operation.
   SupabaseClient get client => Supabase.instance.client;
   
-  // Authentication methods
+  /// Authentication methods
+  
+  /// Registers a new user with email and password
+  /// 
+  /// Creates a new user account in Supabase Auth.
+  /// 
+  /// Parameters:
+  /// - [email]: User's email address
+  /// - [password]: User's password (must meet security requirements)
+  /// 
+  /// Returns an [AuthResponse] with the result of the operation.
+  /// Throws an exception if the registration fails.
   Future<AuthResponse> signUpWithEmail(String email, String password) async {
     return await client.auth.signUp(
       email: email,
@@ -37,6 +75,16 @@ class SupabaseService {
     );
   }
   
+  /// Signs in a user with email and password
+  /// 
+  /// Authenticates an existing user with their credentials.
+  /// 
+  /// Parameters:
+  /// - [email]: User's email address
+  /// - [password]: User's password
+  /// 
+  /// Returns an [AuthResponse] with the authentication result and session.
+  /// Throws an exception if authentication fails.
   Future<AuthResponse> signInWithEmail(String email, String password) async {
     return await client.auth.signInWithPassword(
       email: email,
@@ -44,6 +92,11 @@ class SupabaseService {
     );
   }
   
+  /// Signs out the current user
+  /// 
+  /// Terminates the user's session and removes their authentication token.
+  /// After calling this method, the user will need to sign in again to
+  /// access protected resources.
   Future<void> signOut() async {
     await client.auth.signOut();
   }

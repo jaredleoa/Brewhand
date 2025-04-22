@@ -11,27 +11,26 @@ class ProfileSetupPage extends StatefulWidget {
 
 class _ProfileSetupPageState extends State<ProfileSetupPage> {
   final _usernameController = TextEditingController();
-  final _fullNameController = TextEditingController(); // Changed from displayName to fullName
+  final _fullNameController =
+      TextEditingController(); // Changed from displayName to fullName
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isCheckingUsername = false;
   bool _isUsernameAvailable = false;
   final SupabaseService _supabaseService = SupabaseService();
-  
+
   String? _favoriteBrew; // Combined favorite order/bean into a single field
-  
+
   final List<String> _favoriteBrews = [
     'Espresso',
     'Americano',
     'Cappuccino',
     'Latte',
     'Flat White',
-    'Pour Over (Ethiopia)',
-    'French Press (Colombia)',
+    'Pour Over',
+    'French Press ',
     'Cold Brew',
-    'Aeropress (Kenya)',
-    'V60 (Ethiopia)',
-    'Chemex (Costa Rica)',
+    'Aeropress ',
     'Moka Pot (Brazil)',
   ];
 
@@ -45,13 +44,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Future<void> _checkUsernameAvailability() async {
     final username = _usernameController.text.trim();
     if (username.isEmpty) return;
-    
+
     setState(() {
       _isCheckingUsername = true;
     });
-    
+
     try {
-      _isUsernameAvailable = await _supabaseService.isUsernameAvailable(username);
+      _isUsernameAvailable =
+          await _supabaseService.isUsernameAvailable(username);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,36 +72,36 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       await _supabaseService.createUserProfile(
         username: _usernameController.text.trim(),
-        fullName: _fullNameController.text.trim().isNotEmpty 
-            ? _fullNameController.text.trim() 
+        fullName: _fullNameController.text.trim().isNotEmpty
+            ? _fullNameController.text.trim()
             : null,
         avatarUrl: null,
         bio: null,
         favoriteBrew: _favoriteBrew,
       );
-      
+
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile created successfully!'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       // Navigate to the home page
       Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error saving profile: $e'),
@@ -122,12 +122,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     final Color backgroundColor = Color(0xFF3E1F00);
     final Color cardColor = Color(0xFF59300C);
     final Color brightOrange = Color(0xFFFFB74D);
-    
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
-          'Set Up Your Profile', 
+          'Set Up Your Profile',
           style: TextStyle(
             color: brightOrange,
             fontWeight: FontWeight.bold,
@@ -170,7 +170,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                               'assets/coffee_cup.svg',
                               width: 40,
                               height: 40,
-                              colorFilter: ColorFilter.mode(brightOrange, BlendMode.srcIn),
+                              colorFilter: ColorFilter.mode(
+                                  brightOrange, BlendMode.srcIn),
                             ),
                             SizedBox(width: 12),
                             Text(
@@ -196,7 +197,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  
+
                   // Username Field
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +225,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                             hintText: 'Choose a unique username',
                             hintStyle: TextStyle(color: Colors.white30),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
                             filled: true,
                             fillColor: Colors.transparent,
                             suffixIcon: _isCheckingUsername
@@ -274,13 +276,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Full Name Field (Optional)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 6, top: 12),
+                        padding:
+                            const EdgeInsets.only(left: 4, bottom: 6, top: 12),
                         child: Text(
                           'Full Name (optional)',
                           style: TextStyle(
@@ -302,7 +305,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                             hintText: 'How others will see you',
                             hintStyle: TextStyle(color: Colors.white30),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
                             filled: true,
                             fillColor: Colors.transparent,
                           ),
@@ -311,13 +315,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Favorite Brew
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 6, top: 12),
+                        padding:
+                            const EdgeInsets.only(left: 4, bottom: 6, top: 12),
                         child: Text(
                           'Favorite Coffee Brew',
                           style: TextStyle(
@@ -343,7 +348,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                               'Select your favorite brew',
                               style: TextStyle(color: Colors.white30),
                             ),
-                            icon: Icon(Icons.arrow_drop_down, color: brightOrange),
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: brightOrange),
                             items: _favoriteBrews.map((brew) {
                               return DropdownMenuItem(
                                 value: brew,
@@ -361,10 +367,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Create Profile Button
                   _isLoading
-                      ? Center(child: CircularProgressIndicator(color: brightOrange))
+                      ? Center(
+                          child: CircularProgressIndicator(color: brightOrange))
                       : ElevatedButton(
                           onPressed: _saveProfile,
                           style: ElevatedButton.styleFrom(
@@ -384,7 +391,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                             ),
                           ),
                         ),
-                  
+
                   const SizedBox(height: 20),
                 ],
               ),

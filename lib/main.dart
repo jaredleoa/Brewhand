@@ -1,3 +1,11 @@
+/// BrewHand - Coffee Enthusiast Platform
+/// 
+/// A mobile application for coffee enthusiasts to track, share, and discover
+/// coffee brewing experiences. The app combines personal brewing history with
+/// social features to create a community-driven platform.
+/// 
+/// Created: April 2025
+/// 
 import 'package:flutter/material.dart';
 import 'pages/my_brews_page.dart';
 import 'pages/brew_master_page.dart' as master;
@@ -6,19 +14,28 @@ import 'pages/brew_social_page.dart' as social;
 import 'pages/auth/login_page.dart';
 import 'pages/auth/profile_setup_page.dart';
 
-// Import Supabase service
+// Backend services
 import 'services/supabase_service.dart';
 
+/// Application entry point
+/// 
+/// Initializes the Flutter binding and Supabase backend service
+/// before launching the main application widget.
 void main() async {
+  // Ensure Flutter is initialized before using platform channels
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Supabase
+  // Initialize Supabase backend connection
   final supabaseService = SupabaseService();
   await supabaseService.initialize();
 
   runApp(const BrewHandApp());
 }
 
+/// Main application widget
+/// 
+/// Root widget of the application that manages authentication state
+/// and provides the appropriate screens based on user authentication status.
 class BrewHandApp extends StatefulWidget {
   const BrewHandApp({Key? key}) : super(key: key);
 
@@ -210,7 +227,10 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/// **Tile Widget With Smooth Tap Animation & Navigation**
+/// Custom menu item widget with animation
+///
+/// Provides a consistent UI component for navigation menu items
+/// with smooth tap animation and icon highlighting effects.
 class _MenuItem extends StatefulWidget {
   final String title;
   final String imagePath;
@@ -305,7 +325,10 @@ class _MenuItemState extends State<_MenuItem> {
   }
 }
 
-// Dummy Pages for Navigation
+/// Navigation placeholder pages
+///
+/// These classes serve as temporary placeholders for navigation
+/// during development and testing.
 class BrewMasterPage extends StatelessWidget {
   const BrewMasterPage({Key? key}) : super(key: key);
 
