@@ -10,8 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dialog_flowtter: ^0.3.3
-  
   cupertino_icons: ^1.0.8
 
   #upload image
@@ -43,6 +41,9 @@ dependencies:
   
   # For generating unique IDs
   uuid: ^4.0.0
+  
+  # For displaying relative time (e.g., "2 hours ago")
+  timeago: ^3.6.0
 
 dev_dependencies:
   flutter_test:
@@ -52,13 +53,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Asset declaration for SVG files
+  # Asset declaration for SVG assets:
   assets:
+    - assets/coffee_cup.svg
     - assets/my_brews.svg
     - assets/brew_master.svg
     - assets/brew_bot.svg
     - assets/brew_social.svg
-    - assets/coffee_cup.svg
     - assets/Star.svg
     - assets/camera_icon.svg
     - assets/pour_over_icon.svg

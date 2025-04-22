@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:brewhand/services/supabase_service.dart';
+import 'package:brewhand/main.dart'; // Import for HomePage
 import 'signup_page.dart';
+import 'profile_setup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -41,7 +43,23 @@ class _LoginPageState extends State<LoginPage> {
       await _supabaseService.signInWithEmail(email, password);
       
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      
+      // Check if user has a profile
+      final profile = await _supabaseService.getUserProfile();
+      
+      if (profile == null) {
+        // New user needs to set up profile
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ProfileSetupPage()),
+          (route) => false,
+        );
+      } else {
+        // Existing user with profile
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomePage()),
+          (route) => false,
+        );
+      }
     } on AuthException catch (e) {
       // Check if the error is related to email confirmation
       if (e.message.contains('Email not confirmed') || 
@@ -110,13 +128,15 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = Color(0xFFFFE7D3);
     final Color darkBrown = Color(0xFF3E1F00);
+    final Color mediumBrown = Color(0xFF60300F);
     final Color orangeBrown = Color(0xFFA95E04);
+    final Color brightOrange = Color(0xFFFF9800);
+    final Color lightBeige = Color(0xFFFFE7D3);
     final Color errorRed = Colors.red.shade700;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: darkBrown,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -128,27 +148,68 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 40),
                   // App Logo/Icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.coffee,
+                        color: brightOrange,
+                        size: 48,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'BrewHand',
+                        style: TextStyle(
+                          color: brightOrange,
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
                   Text(
-                    'BrewHand',
+                    'Welcome back',
                     style: TextStyle(
-                      color: darkBrown,
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in to continue your coffee journey',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
                   // Email Field
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.email, color: brightOrange),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: mediumBrown,
                     ),
+                    style: TextStyle(color: Colors.white),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -166,12 +227,24 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.lock, color: brightOrange),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: mediumBrown,
                     ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -180,36 +253,51 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 30),
                   // Login Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: darkBrown,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: brightOrange,
+                      foregroundColor: darkBrown,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      elevation: 5,
+                      shadowColor: brightOrange.withOpacity(0.5),
                     ),
                     child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: darkBrown,
+                              strokeWidth: 3,
+                            ),
                           )
                         : const Text(
                             'Login',
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                   ),
                   const SizedBox(height: 16),
                   // Email confirmation message
                   if (_showEmailConfirmation)
                     Container(
-                      padding: EdgeInsets.all(12),
+                      margin: EdgeInsets.only(top: 16),
+                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: errorRed.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: mediumBrown,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: errorRed),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,16 +338,35 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   const SizedBox(height: 16),
                   // Signup Link
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignupPage()),
-                      );
-                    },
-                    child: Text(
-                      'Don\'t have an account? Sign up',
-                      style: TextStyle(color: orangeBrown),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Don\'t have an account? ',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignupPage()),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: brightOrange,
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          child: Text(
+                            'Sign up',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

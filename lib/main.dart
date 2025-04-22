@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'pages/my_brews_page.dart';
 import 'pages/brew_master_page.dart' as master;
+import 'pages/brew_bot_page.dart' as bot;
+import 'pages/brew_social_page.dart' as social;
 import 'pages/auth/login_page.dart';
 import 'pages/auth/profile_setup_page.dart';
 
@@ -68,19 +70,19 @@ class _BrewHandAppState extends State<BrewHandApp> {
           secondary: const Color(0xFFFFB74D),
         ),
       ),
-      home: _isLoading
-          ? _buildLoadingScreen()
-          : _getInitialScreen(),
+      home: _isLoading ? _buildLoadingScreen() : _getInitialScreen(),
       routes: {
         '/home': (context) => MyBrewsPage(),
         '/login': (context) => const LoginPage(),
         '/profile_setup': (context) => const ProfileSetupPage(),
         '/myBrews': (context) => MyBrewsPage(),
         '/brewMaster': (context) => master.BrewMasterPage(),
+        '/brewBot': (context) => bot.BrewBotPage(),
+        '/brewSocial': (context) => social.BrewSocialPage(),
       },
     );
   }
-  
+
   Widget _buildLoadingScreen() {
     return Scaffold(
       backgroundColor: const Color(0xFF3E1F00),
@@ -203,53 +205,7 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-
-      /// **Bottom Navigation Bar**
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: darkBrown,
-        selectedItemColor: orangeBrown,
-        unselectedItemColor: Colors.orange[300],
-        currentIndex: 0, // This is HomePage, so index 0
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, "/myBrews");
-              break;
-            case 1:
-              Navigator.pushNamed(context, "/brewMaster");
-              break;
-            case 2:
-              Navigator.pushNamed(context, "/brewBot");
-              break;
-            case 3:
-              Navigator.pushNamed(context, "/brewSocial");
-              break;
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.local_cafe, color: Colors.orange[300]),
-            activeIcon: Icon(Icons.local_cafe, color: orangeBrown),
-            label: "Brews",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.coffee_maker, color: Colors.orange[300]),
-            activeIcon: Icon(Icons.coffee_maker, color: orangeBrown),
-            label: "Master",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy, color: Colors.orange[300]),
-            activeIcon: Icon(Icons.smart_toy, color: orangeBrown),
-            label: "Bot",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people, color: Colors.orange[300]),
-            activeIcon: Icon(Icons.people, color: orangeBrown),
-            label: "Social",
-          ),
-        ],
-      ),
+      )
     );
   }
 }
@@ -294,7 +250,7 @@ class _MenuItemState extends State<_MenuItem> {
 
     Navigator.pushNamed(context, widget.route);
   }
-  
+
   // Convert SVG paths to Material Icons
   IconData _getIconForPath(String path) {
     switch (path) {

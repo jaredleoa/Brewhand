@@ -40,15 +40,29 @@ class _SignupPageState extends State<SignupPage> {
       
       if (!mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful! Please check your email to confirm your account.'),
-          backgroundColor: Colors.green,
-        ),
+      // Show a dialog explaining next steps
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Account Created!'),
+            content: const Text(
+              'Please check your email to confirm your account. After confirming, you will be directed to set up your profile.',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Return to login page
+                },
+              ),
+            ],
+          );
+        },
       );
-      
-      // Navigate back to login
-      Navigator.pop(context);
     } on AuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -74,15 +88,22 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = Color(0xFFFFE7D3);
     final Color darkBrown = Color(0xFF3E1F00);
+    final Color mediumBrown = Color(0xFF60300F);
+    final Color orangeBrown = Color(0xFFA95E04);
+    final Color brightOrange = Color(0xFFFF9800);
+    final Color lightBeige = Color(0xFFFFE7D3);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: darkBrown,
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: Text(
+          'Create Account',
+          style: TextStyle(color: brightOrange, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: darkBrown,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: brightOrange),
       ),
       body: SafeArea(
         child: Padding(
@@ -94,17 +115,49 @@ class _SignupPageState extends State<SignupPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
+                  // Welcome message
+                  Text(
+                    'Join the BrewHand community',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Create an account to track your brews and get personalized recommendations',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 30),
                   // Email Field
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.email, color: brightOrange),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: mediumBrown,
                     ),
+                    style: TextStyle(color: Colors.white),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -122,12 +175,24 @@ class _SignupPageState extends State<SignupPage> {
                     controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.lock, color: brightOrange),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: mediumBrown,
                     ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -145,12 +210,24 @@ class _SignupPageState extends State<SignupPage> {
                     controller: _confirmPasswordController,
                     decoration: InputDecoration(
                       labelText: 'Confirm Password',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.lock_outline, color: brightOrange),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: brightOrange),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: mediumBrown,
                     ),
+                    style: TextStyle(color: Colors.white),
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -162,26 +239,60 @@ class _SignupPageState extends State<SignupPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 30),
                   // Signup Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _handleSignup,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: darkBrown,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: brightOrange,
+                      foregroundColor: darkBrown,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      elevation: 5,
+                      shadowColor: brightOrange.withOpacity(0.5),
                     ),
                     child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: darkBrown,
+                              strokeWidth: 3,
+                            ),
                           )
                         : const Text(
-                            'Sign Up',
-                            style: TextStyle(fontSize: 16),
+                            'Create Account',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Back to login
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: brightOrange,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        child: Text(
+                          'Log in',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

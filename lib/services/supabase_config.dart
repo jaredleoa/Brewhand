@@ -14,4 +14,6 @@ class SupabaseTables {
   static const String userStats = 'user_stats';
   static const String coffeeRegions = 'coffee_regions';
   static const String profiles = 'profiles';
+  static const String userFollowing = 'user_following';
+  static const String brewComments = 'brew_comments';
 }

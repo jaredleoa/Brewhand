@@ -103,10 +103,16 @@ class BrewDataService {
     final user = _supabaseService.currentUser;
     if (user == null) return;
     
+    // Get user profile to get username
+    final userProfile = await _supabaseService.getUserProfile();
+    if (userProfile == null) return;
+    
     // Create a post with the current user's information and brew details
     BrewPost post = BrewPost(
       id: _uuid.v4(),
       userId: user.id,
+      username: userProfile.username,
+      createdAt: DateTime.now(),
       postDate: DateTime.now(),
       brewMethod: brew.brewMethod,
       beanType: brew.beanType,
@@ -114,6 +120,7 @@ class BrewDataService {
       waterAmount: brew.waterAmount,
       coffeeAmount: brew.coffeeAmount,
       likes: 0,
+      rating: brew.rating,
       comments: [],
       // You could add an image here if available
     );

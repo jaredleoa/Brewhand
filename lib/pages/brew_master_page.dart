@@ -406,39 +406,26 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
   @override
   void initState() {
     super.initState();
-    _loadBeanLibrary();
     
-    // Initialize with values from "Brew Again" if provided
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialBrewMethod != null) {
-        // Find the brewing method in the list
-        for (var method in brewingMethods) {
-          if (method['name'] == widget.initialBrewMethod) {
-            _showBrewingSetupDialog(widget.initialBrewMethod!);
-            break;
-          }
-        }
-        
-        // Set other initial values if provided
-        setState(() {
-          if (widget.initialBeanType != null) {
-            selectedBean = widget.initialBeanType!;
-          }
-          
-          if (widget.initialGrindSize != null) {
-            recommendedGrindSize = widget.initialGrindSize!;
-          }
-          
-          if (widget.initialWaterAmount != null) {
-            waterAmount = widget.initialWaterAmount!;
-          }
-          
-          if (widget.initialCoffeeAmount != null) {
-            coffeeAmount = widget.initialCoffeeAmount!;
-          }
-        });
-      }
-    });
+    // Set initial values from "Brew Again" if provided
+    if (widget.initialBeanType != null) {
+      selectedBean = widget.initialBeanType!;
+    }
+    
+    if (widget.initialGrindSize != null) {
+      recommendedGrindSize = widget.initialGrindSize!;
+    }
+    
+    if (widget.initialWaterAmount != null) {
+      waterAmount = widget.initialWaterAmount!;
+    }
+    
+    if (widget.initialCoffeeAmount != null) {
+      coffeeAmount = widget.initialCoffeeAmount!;
+    }
+    
+    // Load the bean library (which will handle region selection and dialog display)
+    _loadBeanLibrary();
   }
 
   Future<void> _loadBeanLibrary() async {
@@ -455,7 +442,52 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
           }
         }
         isLoading = false;
+        
+        // Now that the bean library is loaded, handle the "Brew Again" settings if needed
+        if (widget.initialBeanType != null) {
+          // Make sure the bean is set
+          selectedBean = widget.initialBeanType!;
+          
+          // Find the correct region for this bean
+          bool regionFound = false;
+          for (var region in beanLibrary.regions) {
+            if (region.countries.contains(selectedBean)) {
+              selectedRegion = region.name;
+              regionFound = true;
+              break;
+            }
+          }
+          
+          // If region wasn't found, check if the bean exists in any region's countries
+          if (!regionFound) {
+            for (var region in beanLibrary.regions) {
+              for (var country in region.countries) {
+                if (country.toLowerCase() == selectedBean.toLowerCase()) {
+                  selectedRegion = region.name;
+                  selectedBean = country; // Use the exact case from the library
+                  regionFound = true;
+                  break;
+                }
+              }
+              if (regionFound) break;
+            }
+          }
+        }
       });
+      
+      // After bean library is loaded and region is set, show the brewing setup dialog if needed
+      if (widget.initialBrewMethod != null) {
+        // Find the brewing method in the list and show the setup dialog
+        for (var method in brewingMethods) {
+          if (method['name'] == widget.initialBrewMethod) {
+            // Delay showing the dialog slightly to ensure state is updated
+            Future.delayed(Duration(milliseconds: 300), () {
+              _showBrewingSetupDialog(widget.initialBrewMethod!);
+            });
+            break;
+          }
+        }
+      }
     } catch (e) {
       print('Error loading bean library: $e');
       setState(() {
@@ -686,6 +718,15 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
         break;
       }
     }
+    
+    // Ensure the bean is in the selected region's countries
+    bool beanInRegion = false;
+    for (var region in beanLibrary.regions) {
+      if (region.name == selectedRegion) {
+        beanInRegion = region.countries.contains(selectedBean);
+        break;
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -821,7 +862,7 @@ class _BrewMasterPageState extends State<BrewMasterPage> {
                                 SizedBox(height: 8),
                                 // Get countries for the selected region
                                 _buildDropdown(
-                                  value: selectedBean,
+                                  value: _getBeansForSelectedRegion().contains(selectedBean) ? selectedBean : _getBeansForSelectedRegion().isNotEmpty ? _getBeansForSelectedRegion()[0] : '',
                                   items: _getBeansForSelectedRegion(),
                                   onChanged: (value) {
                                     if (value != null) {
