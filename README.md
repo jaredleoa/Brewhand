@@ -1,59 +1,94 @@
 # BrewHand
 
-BrewHand is a comprehensive mobile application for coffee enthusiasts to track, share, and discover coffee brewing experiences. The app combines personal brewing history with social features, creating a community-driven platform for coffee lovers.
+Full-stack mobile application for managing coffee brews, recipes, and brewing history, with guided workflows, asynchronous timers, and persisted user data.
+
+BrewHand is designed as a stateful, data-driven application that supports end-to-end brewing flows, from method selection and configuration to execution, review, and social sharing.
+
+---
 
 ## Features
 
-### My Brews
-- **Personal Profile**: Customize your profile with avatar and favorite coffee preferences
-- **Brewing History**: Track and view your coffee brewing sessions
-- **User Stats**: Monitor your coffee streak, total coffees made, and unique drinks tried
-- **Social Integration**: Follow other coffee enthusiasts and view their profiles
+### My Brews Dashboard
+User dashboard aggregating persisted brew data, including usage statistics, streaks, and historical summaries derived from stored brew records.
 
-### Brew Master
-- **Brewing Guides**: Step-by-step instructions for various brewing methods
-- **Coffee Bean Information**: Details about different coffee origins and flavor profiles
-- **Brewing Parameters**: Recommendations for grind size, water temperature, and brewing time
+![My Brews Dashboard](screenshots/my_brews_dashboard.jpg)
 
-### BrewBot
-- **AI-Powered Recommendations**: Get personalized coffee brewing suggestions
-- **Brewing Assistance**: Receive help with brewing techniques and troubleshooting
+---
 
-### Brew Social
-- **Coffee Posts**: Share your brewing experiences with the community
-- **Interaction**: Like, comment, and follow other users
-- **Discover**: Find new coffee enthusiasts to follow
+### Brewing Method Selection
+Brewing method selection flow driving dynamic configuration paths based on the selected brewing method and difficulty.
 
-## Technologies
+![Brewing Method Selection](screenshots/brewing_method_selection.jpg)
 
-### Frontend
-- **Flutter**: Cross-platform mobile development framework
-- **Dart**: Programming language for Flutter applications
-- **SVG Graphics**: Vector graphics for UI elements
+---
 
-### Backend
-- **Supabase**: Backend-as-a-Service platform
-  - Authentication
-  - PostgreSQL Database
-  - Storage for user avatars and images
-  - Row Level Security (RLS) for data protection
+### Brew Method Parameters
+Parameterized brew setup allowing users to configure beans, grind size, ratios, and water volume using data-driven defaults.
 
-### Key Packages
-- **image_picker**: For selecting profile images
-- **path_provider**: For handling file paths
-- **uuid**: For generating unique identifiers
-- **flutter_svg**: For rendering SVG graphics
+![Brew Method Parameters](screenshots/brew_method_parameters.jpg)
 
-## Database Structure
+---
 
-The app uses several key data models:
+### Step-by-Step Brew Guide
+Sequential brewing guide implementing controlled progression through defined brewing steps.
 
-- **BrewHistory**: Records of coffee brewing sessions
-- **UserStats**: User activity statistics
-- **BrewPost**: Social posts shared by users
-- **UserProfile**: User account information
-- **CoffeeRegion**: Information about coffee origins
+![Step-by-Step Brew Guide](screenshots/brew_master_step_guide.jpg)
 
+---
+
+### Brewing Timer (Asynchronous State)
+Asynchronous brewing step with countdown timer, pause/reset controls, and persisted state handling across navigation.
+
+![Brewing Timer](screenshots/brewing_timer.jpg)
+
+---
+
+### Brew Completion & Review
+Post-brew completion flow capturing user ratings, notes, and feedback before persisting results to storage.
+
+![Brew Completion and Review](screenshots/nrw_completion_review.jpg)
+
+---
+
+### Brew History
+Historical brew records displaying saved parameters, ratings, timestamps, and replay/share functionality.
+
+![Brew History](screenshots/brew_history.jpg)
+
+---
+
+### Brew Social Feed
+Social feed displaying shared brew records with metadata, ratings, and interaction hooks.
+
+![Brew Social](screenshots/brew_social.jpg)
+
+---
+
+### BrewBot Assistant
+Rule-based conversational assistant providing coffee bean and brewing recommendations based on user preferences and inputs.
+
+![BrewBot Assistant](screenshots/brewbot.jpg)
+
+---
+
+## Architecture Overview
+
+- **Frontend:** Flutter mobile application with modular UI components and asynchronous state handling.
+- **Backend:** Supabase for authentication, data persistence, and realtime updates.
+- **Data Model:** Relational schema for brews, methods, parameters, ratings, and user activity.
+- **State Management:** Step-based workflows with persisted state across screens.
+- **Async Logic:** Timers, guided steps, and user-controlled progression.
+
+---
+
+## Tech Stack
+
+- **Frontend:** Flutter, Dart  
+- **Backend:** Supabase (PostgreSQL, Auth, Realtime)  
+- **Data:** Relational data modeling, persisted user records  
+- **Async:** Timers, step-based workflows, realtime updates  
+
+---
 ## Setup Instructions
 
 ### Prerequisites
@@ -89,35 +124,6 @@ The app uses several key data models:
    ```bash
    flutter run
    ```
-## Screenshots
-
-### My Brews Dashboard
-![My Brews Dashboard](screenshots/my_brews_dashboard.jpg)
-
-### Brewing Method Selection
-![Brewing Method Selection](screenshots/brewing_method_selection.jpg)
-
-### Brew Method Parameters
-![Brew Method Parameters](screenshots/brew_method_parameters.jpg)
-
-### Step-by-Step Brew Guide
-![Step-by-Step Brew Guide](screenshots/brew_master_step_guide.jpg)
-
-### Brewing Timer (Asynchronous State)
-![Brewing Timer](screenshots/brewing_timer.jpg)
-
-### Brew Completion & Review
-![Brew Completion and Review](screenshots/brew_completion_review.jpg)
-
-### Brew History
-![Brew History](screenshots/brew_history.jpg)
-
-### Brew Social Feed
-![Brew Social](screenshots/brew_social.jpg)
-
-### BrewBot Assistant
-![BrewBot Assistant](screenshots/brewbot.jpg)
-
 
 ## License
 
