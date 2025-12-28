@@ -1,7 +1,5 @@
 # BrewHand
 
-<img src="assets/images/logo.svg" alt="BrewHand Logo" width="150"/>
-
 BrewHand is a comprehensive mobile application for coffee enthusiasts to track, share, and discover coffee brewing experiences. The app combines personal brewing history with social features, creating a community-driven platform for coffee lovers.
 
 ## Features
@@ -91,10 +89,35 @@ The app uses several key data models:
    ```bash
    flutter run
    ```
+## Screenshots
 
-## Contributing
+### My Brews Dashboard
+![My Brews Dashboard](screenshots/my_brews_dashboard.jpg)
 
-Contributions to BrewHand are welcome! Please feel free to submit pull requests, create issues, or suggest new features.
+### Brewing Method Selection
+![Brewing Method Selection](screenshots/brewing_method_selection.jpg)
+
+### Brew Method Parameters
+![Brew Method Parameters](screenshots/brew_method_parameters.jpg)
+
+### Step-by-Step Brew Guide
+![Step-by-Step Brew Guide](screenshots/brew_master_step_guide.jpg)
+
+### Brewing Timer (Asynchronous State)
+![Brewing Timer](screenshots/brewing_timer.jpg)
+
+### Brew Completion & Review
+![Brew Completion and Review](screenshots/brew_completion_review.jpg)
+
+### Brew History
+![Brew History](screenshots/brew_history.jpg)
+
+### Brew Social Feed
+![Brew Social](screenshots/brew_social.jpg)
+
+### BrewBot Assistant
+![BrewBot Assistant](screenshots/brewbot.jpg)
+
 
 ## License
 
